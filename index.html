@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Ali · Transactions</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0d0d0f;--s1:#141416;--s2:#1c1c1f;--s3:#242428;--b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.14);--tx:#f0efe8;--mu:#7a7978;--paddle:#c8f060;--fuel:#f09030;--food:#f05060;--transfer:#60b0f0;--shopping:#c060f0;--personal:#60e0c0;--ask:#f0c840}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 10% 0%,rgba(200,240,96,.04) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 90% 100%,rgba(96,176,240,.05) 0%,transparent 60%);pointer-events:none;z-index:0}
+header{position:sticky;top:0;z-index:100;background:rgba(13,13,15,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;gap:12px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:28px;height:28px;background:var(--paddle);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.logo-name{font-size:14px;font-weight:700}.logo-sub{font-size:10px;color:var(--mu);font-family:'DM Mono',monospace;margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.sync-btn{display:flex;align-items:center;gap:7px;padding:7px 14px;border:1px solid var(--b2);border-radius:8px;background:var(--s2);color:var(--tx);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s}
+.sync-btn:hover{background:var(--s3);border-color:rgba(255,255,255,.22)}
+.sync-btn:disabled{opacity:.4;cursor:not-allowed}
+.sync-btn.spinning svg{animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--paddle);animation:pp 2s ease-in-out infinite;flex-shrink:0}
+@keyframes pp{0%,100%{opacity:1}50%{opacity:.3}}
+.status-txt{font-size:11px;color:var(--mu);font-family:'DM Mono',monospace}
+.login-btn{display:flex;align-items:center;gap:7px;padding:7px 14px;border:1px solid var(--paddle);border-radius:8px;background:rgba(200,240,96,.08);color:var(--paddle);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .18s}
+.login-btn:hover{background:rgba(200,240,96,.15)}
+main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 18px 80px}
+/* LOGIN SCREEN */
+.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;gap:20px}
+.login-screen h2{font-size:28px;font-weight:800;letter-spacing:-1px}
+.login-screen p{font-size:14px;color:var(--mu);max-width:340px;line-height:1.6}
+.login-big-btn{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border:1px solid var(--paddle);border-radius:10px;background:rgba(200,240,96,.08);color:var(--paddle);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s}
+.login-big-btn:hover{background:rgba(200,240,96,.18)}
+/* DASHBOARD */
+.total-bar{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.total-left h2{font-size:24px;font-weight:800;letter-spacing:-1px}
+.total-left h2 span{color:var(--mu);font-weight:400;font-size:15px}
+.total-left p{font-size:10px;color:var(--mu);margin-top:2px;font-family:'DM Mono',monospace}
+.sbar{flex:1;min-width:160px;max-width:360px;height:8px;border-radius:8px;overflow:hidden;display:flex;background:var(--s3)}
+.bseg{height:100%}
+.sum-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px}
+@media(max-width:800px){.sum-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:480px){.sum-grid{grid-template-columns:repeat(2,1fr)}}
+.cc{background:var(--s1);border:1px solid var(--b1);border-radius:11px;padding:13px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.cc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:11px 11px 0 0;background:var(--ac,#fff)}
+.cc:hover{border-color:var(--b2);transform:translateY(-2px)}.cc.active{border-color:var(--b2);background:var(--s2)}
+.cc[data-c=paddle]{--ac:var(--paddle)}.cc[data-c=fuel]{--ac:var(--fuel)}.cc[data-c=food]{--ac:var(--food)}.cc[data-c=transfer]{--ac:var(--transfer)}.cc[data-c=shopping]{--ac:var(--shopping)}.cc[data-c=personal]{--ac:var(--personal)}
+.cc-icon{font-size:18px;margin-bottom:7px}.cc-name{font-size:10px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--mu);margin-bottom:4px}.cc-amt{font-family:'DM Mono',monospace;font-size:15px;font-weight:500}.cc-cnt{font-size:10px;color:var(--mu);margin-top:2px;font-family:'DM Mono',monospace}
+.frow{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px}
+.fc{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px;border:1px solid var(--b1);background:transparent;color:var(--mu);cursor:pointer;transition:all .14s;font-family:'Syne',sans-serif}
+.fc:hover{border-color:var(--b2);color:var(--tx)}.fc.on{border-color:transparent;color:#0d0d0f}
+.fc[data-f=all].on{background:var(--tx)}.fc[data-f=paddle].on{background:var(--paddle)}.fc[data-f=fuel].on{background:var(--fuel)}.fc[data-f=food].on{background:var(--food)}.fc[data-f=transfer].on{background:var(--transfer)}.fc[data-f=shopping].on{background:var(--shopping)}.fc[data-f=personal].on{background:var(--personal)}.fc[data-f=ask].on{background:var(--ask)}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sec-hd h3{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--mu)}.sec-cnt{font-family:'DM Mono',monospace;font-size:11px;color:var(--mu)}
+.txl{display:flex;flex-direction:column;gap:5px}
+.txr{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:11px 15px;display:flex;align-items:center;gap:11px;transition:border-color .14s}
+.txr:hover{border-color:var(--b2)}.txr.ask-row{border-color:rgba(240,200,64,.25);background:rgba(240,200,64,.03)}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}.txi{flex:1;min-width:0}
+.txm{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.txd{font-size:10px;color:var(--mu);margin-top:2px;font-family:'DM Mono',monospace}
+.ask-btn{margin-top:5px;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;font-size:10px;font-weight:700;border:1px solid rgba(240,200,64,.4);background:rgba(240,200,64,.08);color:var(--ask);cursor:pointer;font-family:'Syne',sans-serif}
+.ask-btn:hover{background:rgba(240,200,64,.2)}
+.badge{font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:20px;text-transform:uppercase;flex-shrink:0}
+.txa{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;min-width:72px;text-align:right;flex-shrink:0}
+.txdt{font-family:'DM Mono',monospace;font-size:10px;color:var(--mu);min-width:52px;text-align:right;flex-shrink:0}
+.ebtn{padding:2px 7px;border-radius:5px;font-size:9px;font-weight:700;border:1px solid var(--b1);background:transparent;color:var(--mu);cursor:pointer;font-family:'Syne',sans-serif;flex-shrink:0}
+.ebtn:hover{border-color:var(--b2);color:var(--tx)}
+.empty{text-align:center;padding:50px 20px;color:var(--mu);font-size:13px}.empty-icon{font-size:34px;margin-bottom:10px;opacity:.4}
+.loading{text-align:center;padding:50px 20px;color:var(--mu);font-size:13px;font-family:'DM Mono',monospace}
+.ld span{animation:bl .8s ease-in-out infinite;animation-fill-mode:both;font-size:20px}
+.ld span:nth-child(2){animation-delay:.15s}.ld span:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center}
+.mbox{background:var(--s1);border:1px solid var(--b2);border-radius:14px;padding:24px;width:420px;max-width:93vw}
+.mtag{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ask);margin-bottom:4px}
+.mname{font-size:18px;font-weight:800;letter-spacing:-.5px;margin-bottom:2px}
+.minfo{font-family:'DM Mono',monospace;font-size:11px;color:var(--mu);margin-bottom:18px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px}
+.mbtn{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--b1);background:var(--s2);cursor:pointer;transition:all .13s;font-family:'Syne',sans-serif;text-align:left;width:100%}
+.mbtn:hover{border-color:var(--b2);background:var(--s3)}.mbtn.sel{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.07)}
+.mbtn-icon{font-size:17px;flex-shrink:0}.mbtn-name{font-size:12px;font-weight:700;color:var(--tx)}.mbtn-desc{font-size:9px;color:var(--mu);margin-top:1px;font-family:'DM Mono',monospace}
+.mfoot{display:flex;justify-content:flex-end;gap:7px}
+.mcancel{padding:7px 15px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--mu);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+.mcancel:hover{color:var(--tx);border-color:var(--b2)}
+.msave{padding:7px 18px;border-radius:7px;border:none;background:var(--tx);color:#0d0d0f;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+.msave:hover{opacity:.85}
+#toast{position:fixed;bottom:20px;right:20px;background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:10px 15px;font-size:12px;color:var(--tx);display:none;z-index:999}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-mark">&#x1F4B3;</div>
+    <div>
+      <div class="logo-name">Ali's Tracker</div>
+      <div class="logo-sub">Bank Muscat &middot; ali@allawati.mobi</div>
+    </div>
+  </div>
+  <div class="hdr-right" id="hdr-right">
+    <div class="sdot" id="sdot" style="display:none"></div>
+    <span class="status-txt" id="status-txt"></span>
+  </div>
+</header>
+
+<main id="main">
+  <div class="loading"><div class="ld"><span>.</span><span>.</span><span>.</span></div></div>
+</main>
+
+<div id="modal" style="display:none" onclick="if(event.target===this)closeM()">
+  <div class="overlay" onclick="if(event.target.classList.contains('overlay'))closeM()">
+    <div class="mbox" onclick="event.stopPropagation()">
+      <div class="mtag">What is this transaction?</div>
+      <div class="mname" id="mname"></div>
+      <div class="minfo" id="minfo"></div>
+      <div class="mgrid" id="mgrid"></div>
+      <div class="mfoot">
+        <button class="mcancel" onclick="closeM()">Skip</button>
+        <button class="msave" onclick="saveM()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+var CATS={
+  paddle:  {l:'Paddle',   i:'🏓',c:'#c8f060',d:'Ace, sports, padel'},
+  fuel:    {l:'Fuel',     i:'⛽',c:'#f09030',d:'Oman Oil, Shell, Al Maha'},
+  food:    {l:'Food',     i:'🍔',c:'#f05060',d:'Restaurants, cafes, delivery'},
+  transfer:{l:'Transfers',i:'💸',c:'#60b0f0',d:'Sent to another person'},
+  shopping:{l:'Shopping', i:'🛍️',c:'#c060f0',d:'Online, malls, stores'},
+  personal:{l:'Personal', i:'✦', c:'#60e0c0',d:'Barber, subscriptions, health'},
+  ask:     {l:'Review',   i:'?',c:'#f0c840',d:''}
+};
+var txs=[],activeF='all',_mid=null,_msel=null,isLoggedIn=false,lastSynced='';
+
+function getSaved(){try{return JSON.parse(localStorage.getItem('ali_ov')||'{}')}catch(e){return{}}}
+function setSaved(d){try{localStorage.setItem('ali_ov',JSON.stringify(d))}catch(e){}}
+
+async function init(){
+  // Check if logged in by trying a lightweight ping
+  try{
+    var r=await fetch('/api/sync',{method:'GET'});
+    if(r.status===401){showLogin();return;}
+    var data=await r.json();
+    if(data.error==='not_authenticated'){showLogin();return;}
+    isLoggedIn=true;
+    var ov=getSaved();
+    txs=data.transactions.map(function(t){return Object.assign({},t,{category:ov[t.id]||t.category})});
+    lastSynced=data.synced;
+    showDashboard();
+  }catch(e){
+    showLogin();
+  }
+}
+
+function showLogin(){
+  document.getElementById('hdr-right').innerHTML='<a class="login-btn" href="/api/auth">&#x1F510; Connect Gmail</a>';
+  document.getElementById('main').innerHTML=
+    '<div class="login-screen">'+
+    '<div style="font-size:48px">&#x1F4B3;</div>'+
+    '<h2>Ali\'s Tracker</h2>'+
+    '<p>Connect your Gmail account to automatically read and categorize your Bank Muscat transactions.</p>'+
+    '<a class="login-big-btn" href="/api/auth">&#x1F510; Connect Gmail to get started</a>'+
+    '<p style="font-size:11px;color:var(--mu);margin-top:8px">Read-only access &middot; Your data stays private</p>'+
+    '</div>';
+}
+
+function showDashboard(){
+  var d=new Date(lastSynced);
+  var syncStr=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('hdr-right').innerHTML=
+    '<div class="sdot"></div>'+
+    '<span class="status-txt" id="status-txt">'+syncStr+'</span>'+
+    '<button class="sync-btn" id="sync-btn" onclick="doSync()">'+
+    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>'+
+    'Sync Gmail</button>'+
+    '<a href="/api/logout" style="font-size:11px;color:var(--mu);font-family:DM Mono,monospace;text-decoration:none">logout</a>';
+
+  document.getElementById('main').innerHTML=
+    '<div class="total-bar">'+
+      '<div class="total-left"><h2 id="gtotal">OMR 0.000 <span>spent</span></h2><p id="drange">21 Mar 2026 &rarr; today</p></div>'+
+      '<div class="sbar" id="sbar"></div>'+
+    '</div>'+
+    '<div class="sum-grid">'+
+      '<div class="cc" data-c="paddle"   onclick="filt(\'paddle\')"  ><div class="cc-icon">🏓</div><div class="cc-name">Paddle</div>  <div class="cc-amt" id="a-paddle">OMR 0.000</div><div class="cc-cnt" id="n-paddle">0 txns</div></div>'+
+      '<div class="cc" data-c="fuel"     onclick="filt(\'fuel\')"    ><div class="cc-icon">⛽</div><div class="cc-name">Fuel</div>    <div class="cc-amt" id="a-fuel">OMR 0.000</div><div class="cc-cnt" id="n-fuel">0 txns</div></div>'+
+      '<div class="cc" data-c="food"     onclick="filt(\'food\')"    ><div class="cc-icon">🍔</div><div class="cc-name">Food</div>    <div class="cc-amt" id="a-food">OMR 0.000</div><div class="cc-cnt" id="n-food">0 txns</div></div>'+
+      '<div class="cc" data-c="transfer" onclick="filt(\'transfer\')" ><div class="cc-icon">💸</div><div class="cc-name">Transfers</div><div class="cc-amt" id="a-transfer">OMR 0.000</div><div class="cc-cnt" id="n-transfer">0 txns</div></div>'+
+      '<div class="cc" data-c="shopping" onclick="filt(\'shopping\')" ><div class="cc-icon">🛍️</div><div class="cc-name">Shopping</div><div class="cc-amt" id="a-shopping">OMR 0.000</div><div class="cc-cnt" id="n-shopping">0 txns</div></div>'+
+      '<div class="cc" data-c="personal" onclick="filt(\'personal\')" ><div class="cc-icon">✦</div><div class="cc-name">Personal</div><div class="cc-amt" id="a-personal">OMR 0.000</div><div class="cc-cnt" id="n-personal">0 txns</div></div>'+
+    '</div>'+
+    '<div class="frow">'+
+      '<button class="fc on" data-f="all"      onclick="filt(\'all\',this)">All</button>'+
+      '<button class="fc"    data-f="paddle"   onclick="filt(\'paddle\',this)">Paddle</button>'+
+      '<button class="fc"    data-f="fuel"     onclick="filt(\'fuel\',this)">Fuel</button>'+
+      '<button class="fc"    data-f="food"     onclick="filt(\'food\',this)">Food</button>'+
+      '<button class="fc"    data-f="transfer" onclick="filt(\'transfer\',this)">Transfers</button>'+
+      '<button class="fc"    data-f="shopping" onclick="filt(\'shopping\',this)">Shopping</button>'+
+      '<button class="fc"    data-f="personal" onclick="filt(\'personal\',this)">Personal</button>'+
+      '<button class="fc"    data-f="ask"      onclick="filt(\'ask\',this)">Needs Review</button>'+
+    '</div>'+
+    '<div class="sec-hd"><h3>Transactions</h3><div class="sec-cnt" id="txcnt"></div></div>'+
+    '<div id="txwrap"></div>';
+
+  renderAll();
+}
+
+async function doSync(){
+  var btn=document.getElementById('sync-btn');
+  if(btn){btn.disabled=true;btn.classList.add('spinning');}
+  document.getElementById('status-txt').textContent='Syncing...';
+  try{
+    var r=await fetch('/api/sync');
+    if(r.status===401){showLogin();return;}
+    var data=await r.json();
+    var ov=getSaved();
+    txs=data.transactions.map(function(t){return Object.assign({},t,{category:ov[t.id]||t.category})});
+    lastSynced=data.synced;
+    renderAll();
+    var d=new Date(data.synced);
+    var syncStr=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('status-txt').textContent=syncStr;
+    toast('Synced — '+data.count+' transactions');
+  }catch(e){
+    toast('Sync failed: '+e.message);
+    document.getElementById('status-txt').textContent='Sync failed';
+  }
+  if(btn){btn.disabled=false;btn.classList.remove('spinning');}
+}
+
+function renderAll(){
+  var tot={paddle:0,fuel:0,food:0,transfer:0,shopping:0,personal:0,ask:0};
+  var cnt={paddle:0,fuel:0,food:0,transfer:0,shopping:0,personal:0,ask:0};
+  var grand=0;
+  for(var i=0;i<txs.length;i++){
+    var t=txs[i],c=t.category||'ask';
+    tot[c]+=t.amount;cnt[c]++;
+    if(c!=='transfer')grand+=t.amount;
+  }
+  var cats=['paddle','fuel','food','transfer','shopping','personal'];
+  for(var j=0;j<cats.length;j++){
+    var c=cats[j];
+    var ae=document.getElementById('a-'+c),ne=document.getElementById('n-'+c);
+    if(ae)ae.textContent='OMR '+tot[c].toFixed(3);
+    if(ne)ne.textContent=cnt[c]+' txn'+(cnt[c]!==1?'s':'');
+  }
+  var ge=document.getElementById('gtotal');
+  if(ge)ge.innerHTML='OMR '+grand.toFixed(3)+' <span>spent</span>';
+  var bo=['food','shopping','fuel','paddle','personal','ask'],bt=0;
+  for(var k=0;k<bo.length;k++)bt+=tot[bo[k]];if(!bt)bt=1;
+  var sb=document.getElementById('sbar');
+  if(sb){var bars='';for(var k=0;k<bo.length;k++)bars+='<div class="bseg" style="width:'+(tot[bo[k]]/bt*100)+'%;background:'+CATS[bo[k]].c+';opacity:.85"></div>';sb.innerHTML=bars;}
+  renderList();
+}
+
+function renderList(){
+  var fl=[];
+  for(var i=0;i<txs.length;i++){if(activeF==='all'||(txs[i].category||'ask')===activeF)fl.push(txs[i]);}
+  var tc=document.getElementById('txcnt');
+  if(tc)tc.textContent=fl.length+' transaction'+(fl.length!==1?'s':'');
+  var wrap=document.getElementById('txwrap');if(!wrap)return;
+  if(!fl.length){wrap.innerHTML='<div class="empty"><div class="empty-icon">&#x1F50D;</div>No transactions here.</div>';return;}
+  var h='<div class="txl">';
+  for(var i=0;i<fl.length;i++){
+    var tx=fl[i],c=CATS[tx.category]||CATS.ask,isAsk=(tx.category==='ask');
+    h+='<div class="txr'+(isAsk?' ask-row':'')+'">';
+    h+='<div class="dot" style="background:'+c.c+'"></div>';
+    h+='<div class="txi"><div class="txm">'+esc(tx.merchant)+'</div>';
+    if(isAsk)h+='<button class="ask-btn" data-id="'+tx.id+'" onclick="openMById(this.dataset.id)">? Tap to categorize</button>';
+    else h+='<div class="txd">'+esc(tx.date)+'</div>';
+    h+='</div>';
+    h+='<div class="badge" style="background:'+c.c+'20;color:'+c.c+'">'+c.l+'</div>';
+    h+='<div class="txa">OMR '+tx.amount.toFixed(3)+'</div>';
+    if(!isAsk)h+='<div class="txdt">'+esc(tx.date)+'</div>';
+    h+='<button class="ebtn" data-id="'+tx.id+'" onclick="openMById(this.dataset.id)">edit</button>';
+    h+='</div>';
+  }
+  h+='</div>';wrap.innerHTML=h;
+}
+
+function filt(f,el){
+  activeF=f;
+  document.querySelectorAll('.fc').forEach(function(b){b.classList.toggle('on',b.dataset.f===f)});
+  document.querySelectorAll('.cc').forEach(function(c){c.classList.toggle('active',c.dataset.c===f)});
+  renderList();
+}
+
+function openMById(id){for(var i=0;i<txs.length;i++){if(txs[i].id===id){openM(txs[i]);return;}}}
+function openM(tx){
+  _mid=tx.id;_msel=tx.category;
+  document.getElementById('mname').textContent=tx.merchant;
+  document.getElementById('minfo').textContent='OMR '+tx.amount.toFixed(3)+'  \xb7  '+tx.date;
+  var keys=['paddle','fuel','food','transfer','shopping','personal'],g='';
+  for(var i=0;i<keys.length;i++){
+    var k=keys[i],v=CATS[k];
+    g+='<button class="mbtn'+(tx.category===k?' sel':'')+'" data-cat="'+k+'" onclick="selC(this.dataset.cat)">';
+    g+='<div class="mbtn-icon">'+v.i+'</div><div><div class="mbtn-name">'+v.l+'</div><div class="mbtn-desc">'+v.d+'</div></div></button>';
+  }
+  document.getElementById('mgrid').innerHTML=g;
+  document.getElementById('modal').style.display='block';
+}
+function selC(c){_msel=c;document.querySelectorAll('.mbtn').forEach(function(b){b.classList.toggle('sel',b.dataset.cat===c)});}
+function saveM(){
+  if(!_msel||!_mid){closeM();return;}
+  for(var i=0;i<txs.length;i++){if(txs[i].id===_mid){txs[i].category=_msel;break;}}
+  var ov=getSaved();ov[_mid]=_msel;setSaved(ov);
+  renderAll();toast('Saved as '+CATS[_msel].l);closeM();
+}
+function closeM(){document.getElementById('modal').style.display='none';_mid=null;_msel=null;}
+function toast(m){var e=document.getElementById('toast');e.textContent=m;e.style.display='block';clearTimeout(window._tt);window._tt=setTimeout(function(){e.style.display='none';},2800);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+init();
+</script>
+</body>
+</html>
