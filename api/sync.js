@@ -1,6 +1,15 @@
 import { google } from 'googleapis';
 import { getClient } from './auth.js';
-import { parse } from 'cookie';
+
+function parseCookies(req) {
+  const list = {};
+  const rc = req.headers.cookie;
+  if (rc) rc.split(';').forEach(c => {
+    const parts = c.split('=');
+    list[parts[0].trim()] = decodeURIComponent(parts.slice(1).join('=').trim());
+  });
+  return list;
+}
 
 function categorize(s) {
   s = s.toLowerCase();
@@ -25,7 +34,14 @@ function parseEmail(msg) {
 
   const sentM = s.match(/You have sent OMR ([\d,.]+) to ([A-Z][A-Z '\-]+?) (?:from your|using)/i);
   if (sentM) {
-    return { id: msg.messageId, merchant: 'Sent → ' + sentM[2].trim(), amount: parseFloat(sentM[1]), category: 'transfer', date: dateStr, ts };
+    return {
+      id: msg.messageId,
+      merchant: 'Sent → ' + sentM[2].trim(),
+      amount: parseFloat(sentM[1]),
+      category: 'transfer',
+      date: dateStr,
+      ts
+    };
   }
 
   const descM = s.match(/Description\s*:\s*[\d]+-(.+?)(?:\s+Amount|\s*$)/i);
@@ -34,7 +50,14 @@ function parseEmail(msg) {
     const merchant = descM[1].trim().replace(/\s+(Amount|Date|POS\d+).*$/i, '');
     const cat = categorize(s);
     if (!cat) return null;
-    return { id: msg.messageId, merchant, amount: parseFloat(amtM[1]), category: cat, date: dateStr, ts };
+    return {
+      id: msg.messageId,
+      merchant,
+      amount: parseFloat(amtM[1]),
+      category: cat,
+      date: dateStr,
+      ts
+    };
   }
 
   return null;
@@ -42,7 +65,7 @@ function parseEmail(msg) {
 
 export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
-  const cookies = parse(req.headers.cookie || '');
+  const cookies = parseCookies(req);
   const tokenStr = cookies.gTokens;
   if (!tokenStr) return res.status(401).json({ error: 'not_authenticated' });
 
@@ -63,14 +86,22 @@ export default async function handler(req, res) {
 
     for (const m of messages) {
       const detail = await gmail.users.messages.get({
-        userId: 'me', id: m.id, format: 'metadata', metadataHeaders: ['Date']
+        userId: 'me',
+        id: m.id,
+        format: 'metadata',
+        metadataHeaders: ['Date']
       });
-      const tx = parseEmail({ messageId: m.id, snippet: detail.data.snippet, internalDate: detail.data.internalDate });
+      const tx = parseEmail({
+        messageId: m.id,
+        snippet: detail.data.snippet,
+        internalDate: detail.data.internalDate
+      });
       if (tx && tx.amount > 0) transactions.push(tx);
     }
 
     transactions.sort((a, b) => b.ts - a.ts);
     res.json({ transactions, count: transactions.length, synced: new Date().toISOString() });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
