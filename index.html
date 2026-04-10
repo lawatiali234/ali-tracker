@@ -3,431 +3,1583 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Ali · Transactions</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<title>Ali · Spending Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#0d0d0f;--s1:#141416;--s2:#1c1c1f;--s3:#242428;--b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.14);--tx:#f0efe8;--mu:#7a7978;--paddle:#c8f060;--fuel:#f09030;--food:#f05060;--transfer:#60b0f0;--shopping:#c060f0;--personal:#60e0c0;--ask:#f0c840}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 10% 0%,rgba(200,240,96,.04) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 90% 100%,rgba(96,176,240,.05) 0%,transparent 60%);pointer-events:none;z-index:0}
-header{position:sticky;top:0;z-index:100;background:rgba(13,13,15,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;gap:12px}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-mark{width:28px;height:28px;background:var(--paddle);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
-.logo-name{font-size:14px;font-weight:700}.logo-sub{font-size:10px;color:var(--mu);font-family:'DM Mono',monospace;margin-top:1px}
-.hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.sync-btn{display:flex;align-items:center;gap:7px;padding:7px 14px;border:1px solid var(--b2);border-radius:8px;background:var(--s2);color:var(--tx);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s}
-.sync-btn:hover{background:var(--s3);border-color:rgba(255,255,255,.22)}
-.sync-btn:disabled{opacity:.4;cursor:not-allowed}
-.sync-btn.spinning svg{animation:rot .7s linear infinite}
-@keyframes rot{to{transform:rotate(360deg)}}
-.add-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--paddle);border-radius:8px;background:rgba(200,240,96,.08);color:var(--paddle);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
-.add-btn:hover{background:rgba(200,240,96,.18)}
-.sdot{width:7px;height:7px;border-radius:50%;background:var(--paddle);animation:pp 2s ease-in-out infinite;flex-shrink:0}
-@keyframes pp{0%,100%{opacity:1}50%{opacity:.3}}
-.status-txt{font-size:11px;color:var(--mu);font-family:'DM Mono',monospace}
-.login-btn{display:flex;align-items:center;gap:7px;padding:7px 14px;border:1px solid var(--paddle);border-radius:8px;background:rgba(200,240,96,.08);color:var(--paddle);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .18s}
-.login-btn:hover{background:rgba(200,240,96,.18)}
-main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 18px 80px}
-.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;gap:20px}
-.login-screen h2{font-size:28px;font-weight:800;letter-spacing:-1px}
-.login-screen p{font-size:14px;color:var(--mu);max-width:340px;line-height:1.6}
-.login-big-btn{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border:1px solid var(--paddle);border-radius:10px;background:rgba(200,240,96,.08);color:var(--paddle);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s}
-.login-big-btn:hover{background:rgba(200,240,96,.18)}
-.total-bar{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.total-left h2{font-size:24px;font-weight:800;letter-spacing:-1px}
-.total-left h2 span{color:var(--mu);font-weight:400;font-size:15px}
-.total-left p{font-size:10px;color:var(--mu);margin-top:2px;font-family:'DM Mono',monospace}
-.sbar{flex:1;min-width:160px;max-width:360px;height:8px;border-radius:8px;overflow:hidden;display:flex;background:var(--s3)}
-.bseg{height:100%}
-.sum-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px}
-@media(max-width:800px){.sum-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:480px){.sum-grid{grid-template-columns:repeat(2,1fr)}}
-.cc{background:var(--s1);border:1px solid var(--b1);border-radius:11px;padding:13px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
-.cc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:11px 11px 0 0;background:var(--ac,#fff)}
-.cc:hover{border-color:var(--b2);transform:translateY(-2px)}.cc.active{border-color:var(--b2);background:var(--s2)}
-.cc[data-c=paddle]{--ac:var(--paddle)}.cc[data-c=fuel]{--ac:var(--fuel)}.cc[data-c=food]{--ac:var(--food)}.cc[data-c=transfer]{--ac:var(--transfer)}.cc[data-c=shopping]{--ac:var(--shopping)}.cc[data-c=personal]{--ac:var(--personal)}
-.cc-icon{font-size:18px;margin-bottom:7px}.cc-name{font-size:10px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--mu);margin-bottom:4px}.cc-amt{font-family:'DM Mono',monospace;font-size:15px;font-weight:500}.cc-cnt{font-size:10px;color:var(--mu);margin-top:2px;font-family:'DM Mono',monospace}
-.frow{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px}
-.fc{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px;border:1px solid var(--b1);background:transparent;color:var(--mu);cursor:pointer;transition:all .14s;font-family:'Syne',sans-serif}
-.fc:hover{border-color:var(--b2);color:var(--tx)}.fc.on{border-color:transparent;color:#0d0d0f}
-.fc[data-f=all].on{background:var(--tx)}.fc[data-f=paddle].on{background:var(--paddle)}.fc[data-f=fuel].on{background:var(--fuel)}.fc[data-f=food].on{background:var(--food)}.fc[data-f=transfer].on{background:var(--transfer)}.fc[data-f=shopping].on{background:var(--shopping)}.fc[data-f=personal].on{background:var(--personal)}.fc[data-f=ask].on{background:var(--ask)}
-.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.sec-hd h3{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--mu)}.sec-cnt{font-family:'DM Mono',monospace;font-size:11px;color:var(--mu)}
-.txl{display:flex;flex-direction:column;gap:5px}
-.txr{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:11px 15px;display:flex;align-items:center;gap:11px;transition:border-color .14s}
-.txr:hover{border-color:var(--b2)}.txr.ask-row{border-color:rgba(240,200,64,.25);background:rgba(240,200,64,.03)}.txr.manual-row{border-color:rgba(200,240,96,.15)}
-.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}.txi{flex:1;min-width:0}
-.txm{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.txd{font-size:10px;color:var(--mu);margin-top:2px;font-family:'DM Mono',monospace}
-.ask-btn{margin-top:5px;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;font-size:10px;font-weight:700;border:1px solid rgba(240,200,64,.4);background:rgba(240,200,64,.08);color:var(--ask);cursor:pointer;font-family:'Syne',sans-serif}
-.ask-btn:hover{background:rgba(240,200,64,.2)}
-.badge{font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:20px;text-transform:uppercase;flex-shrink:0}
-.manual-badge{font-size:9px;color:var(--paddle);font-family:'DM Mono',monospace;flex-shrink:0;opacity:.6}
-.txa{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;min-width:72px;text-align:right;flex-shrink:0}
-.txdt{font-family:'DM Mono',monospace;font-size:10px;color:var(--mu);min-width:52px;text-align:right;flex-shrink:0}
-.ebtn{padding:2px 7px;border-radius:5px;font-size:9px;font-weight:700;border:1px solid var(--b1);background:transparent;color:var(--mu);cursor:pointer;font-family:'Syne',sans-serif;flex-shrink:0}
-.ebtn:hover{border-color:var(--b2);color:var(--tx)}
-.delbtn{padding:2px 7px;border-radius:5px;font-size:9px;font-weight:700;border:1px solid rgba(240,80,96,.3);background:transparent;color:rgba(240,80,96,.6);cursor:pointer;font-family:'Syne',sans-serif;flex-shrink:0}
-.delbtn:hover{background:rgba(240,80,96,.1);color:var(--food);border-color:var(--food)}
-.empty{text-align:center;padding:50px 20px;color:var(--mu);font-size:13px}.empty-icon{font-size:34px;margin-bottom:10px;opacity:.4}
-.loading{text-align:center;padding:50px 20px;color:var(--mu);font-size:13px;font-family:'DM Mono',monospace}
-.ld span{animation:bl .8s ease-in-out infinite;animation-fill-mode:both;font-size:20px}
-.ld span:nth-child(2){animation-delay:.15s}.ld span:nth-child(3){animation-delay:.3s}
-@keyframes bl{0%,80%,100%{opacity:.2}40%{opacity:1}}
-.overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center}
-.mbox{background:var(--s1);border:1px solid var(--b2);border-radius:14px;padding:24px;width:420px;max-width:93vw}
-.mtag{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ask);margin-bottom:4px}
-.mname{font-size:18px;font-weight:800;letter-spacing:-.5px;margin-bottom:2px}
-.minfo{font-family:'DM Mono',monospace;font-size:11px;color:var(--mu);margin-bottom:18px}
-.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px}
-.mbtn{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--b1);background:var(--s2);cursor:pointer;transition:all .13s;font-family:'Syne',sans-serif;text-align:left;width:100%}
-.mbtn:hover{border-color:var(--b2);background:var(--s3)}.mbtn.sel{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.07)}
-.mbtn-icon{font-size:17px;flex-shrink:0}.mbtn-name{font-size:12px;font-weight:700;color:var(--tx)}.mbtn-desc{font-size:9px;color:var(--mu);margin-top:1px;font-family:'DM Mono',monospace}
-.mfoot{display:flex;justify-content:flex-end;gap:7px}
-.mcancel{padding:7px 15px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--mu);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
-.mcancel:hover{color:var(--tx);border-color:var(--b2)}
-.msave{padding:7px 18px;border-radius:7px;border:none;background:var(--tx);color:#0d0d0f;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
-.msave:hover{opacity:.85}
-.add-form-box{background:var(--s1);border:1px solid var(--b2);border-radius:14px;padding:24px;width:460px;max-width:93vw}
-.add-form-title{font-size:16px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
-.add-form-sub{font-size:11px;color:var(--mu);font-family:'DM Mono',monospace;margin-bottom:20px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.form-group{display:flex;flex-direction:column;gap:5px}
-.form-group label{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mu)}
-.form-group input{padding:9px 12px;border-radius:8px;border:1px solid var(--b1);background:var(--s2);color:var(--tx);font-family:'DM Mono',monospace;font-size:13px;transition:border-color .14s;width:100%}
-.form-group input:focus{outline:none;border-color:var(--b2)}
-.form-group input::placeholder{color:var(--mu)}
-.cat-select-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:16px}
-.cat-sel-btn{padding:8px 10px;border-radius:8px;border:1px solid var(--b1);background:var(--s2);cursor:pointer;transition:all .13s;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--mu);display:flex;align-items:center;gap:6px}
-.cat-sel-btn:hover{border-color:var(--b2);color:var(--tx)}
-.cat-sel-btn.sel{color:#0d0d0f;border-color:transparent}
-.cat-sel-btn[data-c=paddle].sel{background:var(--paddle)}
-.cat-sel-btn[data-c=fuel].sel{background:var(--fuel)}
-.cat-sel-btn[data-c=food].sel{background:var(--food)}
-.cat-sel-btn[data-c=transfer].sel{background:var(--transfer)}
-.cat-sel-btn[data-c=shopping].sel{background:var(--shopping)}
-.cat-sel-btn[data-c=personal].sel{background:var(--personal)}
-#toast{position:fixed;bottom:20px;right:20px;background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:10px 15px;font-size:12px;color:var(--tx);display:none;z-index:999}
+:root {
+  --bg: #080a0f;
+  --bg2: #0d1017;
+  --bg3: #131720;
+  --bg4: #1a2030;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --tx: #e8eaf2;
+  --tx2: #8892a4;
+  --tx3: #4a5568;
+
+  --paddle: #a8ff78;
+  --fuel: #ff9f43;
+  --food: #ff6b81;
+  --gaming: #a29bfe;
+  --personal: #74b9ff;
+  --shopping: #fd79a8;
+  --trips: #ffeaa7;
+  --transport: #55efc4;
+  --transfers: #636e72;
+  --salary: #00b894;
+
+  --paddle-bg: rgba(168,255,120,0.08);
+  --fuel-bg: rgba(255,159,67,0.08);
+  --food-bg: rgba(255,107,129,0.08);
+  --gaming-bg: rgba(162,155,254,0.08);
+  --personal-bg: rgba(116,185,255,0.08);
+  --shopping-bg: rgba(253,121,168,0.08);
+  --trips-bg: rgba(255,234,167,0.08);
+  --transport-bg: rgba(85,239,196,0.08);
+  --transfers-bg: rgba(99,110,114,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  color: var(--tx);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Background grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Glow orb */
+body::after {
+  content: '';
+  position: fixed;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(168,255,120,0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── HEADER ─────────────────────────────────────────── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8,10,15,0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  gap: 16px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--paddle), rgba(168,255,120,0.4));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.logo-text { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+.logo-sub { font-size: 10px; color: var(--tx3); font-family: 'JetBrains Mono', monospace; margin-top: 1px; }
+
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 5px 6px;
+}
+
+.month-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--tx2);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.month-btn:hover { background: var(--bg4); color: var(--tx); }
+.month-btn.active {
+  background: var(--paddle-bg);
+  color: var(--paddle);
+  border: 1px solid rgba(168,255,120,0.2);
+}
+
+.nav-arrow {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--tx2);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+.nav-arrow:hover { background: var(--bg4); color: var(--tx); }
+
+.year-label {
+  font-size: 11px;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+  padding: 0 8px;
+}
+
+.dropdown-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dropdown-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+}
+.dropdown-wrap select {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  color: var(--tx);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 28px 5px 10px;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238892a4' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  transition: border-color 0.15s;
+  min-width: 120px;
+}
+.dropdown-wrap select:hover { border-color: rgba(255,255,255,0.2); }
+.dropdown-wrap select option { background: #1a2030; }
+
+
+/* ─── MAIN ───────────────────────────────────────────── */
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px 28px 80px;
+}
+
+/* ─── TOP STATS ──────────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.stat-card.spending::before { background: linear-gradient(90deg, var(--food), var(--shopping)); }
+.stat-card.salary::before { background: linear-gradient(90deg, var(--salary), rgba(0,184,148,0.3)); }
+.stat-card.net::before { background: linear-gradient(90deg, var(--paddle), rgba(168,255,120,0.3)); }
+.stat-card.transfers-card::before { background: linear-gradient(90deg, var(--transfers), rgba(99,110,114,0.3)); }
+
+.stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--tx3);
+  margin-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.stat-amount {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1;
+  font-family: 'JetBrains Mono', monospace;
+}
+.stat-amount .currency {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--tx2);
+  margin-right: 3px;
+}
+.stat-sub {
+  font-size: 11px;
+  color: var(--tx3);
+  margin-top: 5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.badge-green { background: rgba(0,184,148,0.12); color: var(--salary); }
+.badge-red { background: rgba(255,107,129,0.12); color: var(--food); }
+.badge-yellow { background: rgba(255,234,167,0.12); color: var(--trips); }
+
+/* ─── CHARTS ROW ─────────────────────────────────────── */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1.8fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.chart-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.chart-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--tx3);
+  margin-bottom: 16px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Donut chart */
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.donut-svg-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.donut-center-amt {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.donut-center-label {
+  font-size: 9px;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 2px;
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.legend-name {
+  font-size: 11px;
+  color: var(--tx2);
+  flex: 1;
+}
+.legend-amt {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--tx);
+  font-weight: 500;
+}
+.legend-pct {
+  font-size: 10px;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+  width: 30px;
+  text-align: right;
+}
+
+/* Bar chart */
+.bar-chart-wrap {
+  height: 160px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding-bottom: 24px;
+  position: relative;
+}
+.bar-chart-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: 24px;
+  left: 0; right: 0;
+  height: 1px;
+  background: var(--border);
+}
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  height: 100%;
+  justify-content: flex-end;
+  position: relative;
+}
+.bar-fill {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  min-height: 2px;
+  transition: height 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+.bar-fill:hover { filter: brightness(1.3); }
+.bar-label {
+  position: absolute;
+  bottom: -20px;
+  font-size: 9px;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+.bar-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 10;
+}
+.bar-fill:hover + .bar-tooltip,
+.bar-col:hover .bar-tooltip { opacity: 1; }
+
+/* ─── CATEGORY CARDS ─────────────────────────────────── */
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.cat-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.cat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.cat-card.active { border-color: var(--ac, rgba(255,255,255,0.3)); background: var(--ac-bg, var(--bg3)); }
+
+.cat-card[data-cat=paddle] { --ac: rgba(168,255,120,0.4); --ac-bg: rgba(168,255,120,0.05); }
+.cat-card[data-cat=fuel] { --ac: rgba(255,159,67,0.4); --ac-bg: rgba(255,159,67,0.05); }
+.cat-card[data-cat=food] { --ac: rgba(255,107,129,0.4); --ac-bg: rgba(255,107,129,0.05); }
+.cat-card[data-cat=gaming] { --ac: rgba(162,155,254,0.4); --ac-bg: rgba(162,155,254,0.05); }
+.cat-card[data-cat=personal] { --ac: rgba(116,185,255,0.4); --ac-bg: rgba(116,185,255,0.05); }
+.cat-card[data-cat=shopping] { --ac: rgba(253,121,168,0.4); --ac-bg: rgba(253,121,168,0.05); }
+.cat-card[data-cat=trips] { --ac: rgba(255,234,167,0.4); --ac-bg: rgba(255,234,167,0.05); }
+.cat-card[data-cat=transport] { --ac: rgba(85,239,196,0.4); --ac-bg: rgba(85,239,196,0.05); }
+.cat-card[data-cat=transfers] { --ac: rgba(99,110,114,0.4); --ac-bg: rgba(99,110,114,0.05); }
+
+.cat-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: 10px 10px 0 0;
+}
+.cat-icon { font-size: 20px; margin-bottom: 8px; }
+.cat-name { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--tx3); margin-bottom: 5px; }
+.cat-amount { font-size: 16px; font-weight: 700; font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; }
+.cat-count { font-size: 10px; color: var(--tx3); font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
+
+/* ─── TRANSACTIONS ───────────────────────────────────── */
+.tx-section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tx-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.tx-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tx-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+}
+.tx-count {
+  font-size: 11px;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.filter-chips {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.chip {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--tx2);
+  cursor: pointer;
+  transition: all 0.13s;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.chip:hover { border-color: var(--border2); color: var(--tx); }
+.chip.on { color: #080a0f; border-color: transparent; }
+.chip[data-f=all].on { background: var(--tx); }
+.chip[data-f=paddle].on { background: var(--paddle); }
+.chip[data-f=fuel].on { background: var(--fuel); }
+.chip[data-f=food].on { background: var(--food); }
+.chip[data-f=gaming].on { background: var(--gaming); }
+.chip[data-f=personal].on { background: var(--personal); }
+.chip[data-f=shopping].on { background: var(--shopping); }
+.chip[data-f=trips].on { background: var(--trips); color: #080a0f; }
+.chip[data-f=transport].on { background: var(--transport); }
+.chip[data-f=transfers].on { background: var(--tx2); }
+
+.tx-list { display: flex; flex-direction: column; }
+.tx-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.tx-row:last-child { border-bottom: none; }
+.tx-row:hover { background: rgba(255,255,255,0.02); }
+
+.tx-cat-dot {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.tx-info { flex: 1; min-width: 0; }
+.tx-merchant {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tx-meta {
+  font-size: 10px;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 2px;
+}
+.tx-badge {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+.tx-amount {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+  text-align: right;
+  min-width: 80px;
+}
+.tx-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--tx3);
+  flex-shrink: 0;
+  min-width: 70px;
+  text-align: right;
+}
+
+.no-tx {
+  padding: 50px 20px;
+  text-align: center;
+  color: var(--tx3);
+  font-size: 13px;
+}
+
+/* ─── TRIP BANNER ────────────────────────────────────── */
+.trip-banner {
+  background: linear-gradient(135deg, rgba(255,234,167,0.06), rgba(255,234,167,0.02));
+  border: 1px solid rgba(255,234,167,0.15);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.trip-banner-icon { font-size: 24px; }
+.trip-banner-text { flex: 1; }
+.trip-banner-title { font-size: 12px; font-weight: 600; color: var(--trips); }
+.trip-banner-sub { font-size: 11px; color: var(--tx3); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+.trip-banner-amt { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--trips); }
+
+/* ─── RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 900px) {
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .charts-row { grid-template-columns: 1fr; }
+  .cat-grid { grid-template-columns: repeat(3, 1fr); }
+  .header-center { display: none; }
+}
+@media (max-width: 600px) {
+  main { padding: 16px 16px 60px; }
+  .cat-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
 </style>
 </head>
 <body>
+
 <header>
   <div class="logo">
-    <div class="logo-mark">&#x1F4B3;</div>
+    <div class="logo-icon">💳</div>
     <div>
-      <div class="logo-name">Ali's Tracker</div>
-      <div class="logo-sub">Bank Muscat &middot; ali@allawati.mobi</div>
+      <div class="logo-text">Ali's Dashboard</div>
+      <div class="logo-sub">Bank Muscat · ali@allawati.mobi</div>
     </div>
   </div>
-  <div class="hdr-right" id="hdr-right">
-    <div class="loading"><div class="ld"><span>.</span><span>.</span><span>.</span></div></div>
+
+  <div class="header-center" id="month-nav">
+    <div class="dropdown-wrap">
+      <label class="dropdown-label">VIEW</label>
+      <select id="view-select" onchange="setView(this.value)">
+        <option value="monthly">Monthly</option>
+        <option value="yearly">All Time</option>
+      </select>
+    </div>
+    <div class="dropdown-wrap">
+      <label class="dropdown-label">MONTH</label>
+      <select id="month-select" onchange="selectMonth(this.value)"></select>
+    </div>
   </div>
+
+  <div class="header-right"></div>
 </header>
 
 <main id="main">
-  <div class="loading"><div class="ld"><span>.</span><span>.</span><span>.</span></div></div>
+  <div style="text-align:center;padding:60px;color:var(--tx3);">Loading...</div>
 </main>
 
-<!-- CATEGORY MODAL -->
-<div id="modal" style="display:none" onclick="if(event.target===this)closeM()">
-  <div class="overlay" onclick="if(event.target.classList.contains('overlay'))closeM()">
-    <div class="mbox" onclick="event.stopPropagation()">
-      <div class="mtag">What is this transaction?</div>
-      <div class="mname" id="mname"></div>
-      <div class="minfo" id="minfo"></div>
-      <div class="mgrid" id="mgrid"></div>
-      <div class="mfoot">
-        <button class="mcancel" onclick="closeM()">Skip</button>
-        <button class="msave" onclick="saveM()">Save</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ADD TRANSACTION MODAL -->
-<div id="add-modal" style="display:none" onclick="if(event.target===this)closeAdd()">
-  <div class="overlay" onclick="if(event.target.classList.contains('overlay'))closeAdd()">
-    <div class="add-form-box" onclick="event.stopPropagation()">
-      <div class="add-form-title">Add transaction</div>
-      <div class="add-form-sub">Manually add a transaction</div>
-      <div class="form-row">
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Merchant / Description</label>
-          <input id="add-merchant" type="text" placeholder="e.g. Carrefour Muscat"/>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Amount (OMR)</label>
-          <input id="add-amount" type="number" step="0.001" min="0" placeholder="0.000"/>
-        </div>
-        <div class="form-group">
-          <label>Date</label>
-          <input id="add-date" type="date"/>
-        </div>
-      </div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mu);margin-bottom:8px">Category</div>
-      <div class="cat-select-grid">
-        <button class="cat-sel-btn" data-c="paddle"   onclick="selAddCat('paddle')"  >🏓 Paddle</button>
-        <button class="cat-sel-btn" data-c="fuel"     onclick="selAddCat('fuel')"    >⛽ Fuel</button>
-        <button class="cat-sel-btn" data-c="food"     onclick="selAddCat('food')"    >🍔 Food</button>
-        <button class="cat-sel-btn" data-c="transfer" onclick="selAddCat('transfer')">💸 Transfers</button>
-        <button class="cat-sel-btn" data-c="shopping" onclick="selAddCat('shopping')">🛍️ Shopping</button>
-        <button class="cat-sel-btn" data-c="personal" onclick="selAddCat('personal')">✦ Personal</button>
-      </div>
-      <div class="mfoot">
-        <button class="mcancel" onclick="closeAdd()">Cancel</button>
-        <button class="msave" onclick="submitAdd()">Add transaction</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="toast"></div>
-
 <script>
-var CATS={
-  paddle:  {l:'Paddle',   i:'🏓',c:'#c8f060',d:'Ace, sports, padel'},
-  fuel:    {l:'Fuel',     i:'⛽',c:'#f09030',d:'Oman Oil, Shell, Al Maha'},
-  food:    {l:'Food',     i:'🍔',c:'#f05060',d:'Restaurants, cafes, delivery'},
-  transfer:{l:'Transfers',i:'💸',c:'#60b0f0',d:'Sent to another person'},
-  shopping:{l:'Shopping', i:'🛍️',c:'#c060f0',d:'Online, malls, stores'},
-  personal:{l:'Personal', i:'✦', c:'#60e0c0',d:'Barber, subscriptions, health'},
-  ask:     {l:'Review',   i:'?',c:'#f0c840',d:''}
+// ════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════
+const CATS = {
+  paddle:    { l:'Paddle',    i:'🏓', c:'#a8ff78' },
+  fuel:      { l:'Fuel',      i:'⛽', c:'#ff9f43' },
+  food:      { l:'Food',      i:'🍔', c:'#ff6b81' },
+  gaming:    { l:'Gaming',    i:'🎮', c:'#a29bfe' },
+  personal:  { l:'Personal',  i:'✦',  c:'#74b9ff' },
+  shopping:  { l:'Shopping',  i:'🛍️', c:'#fd79a8' },
+  trips:     { l:'Trips',     i:'✈️', c:'#ffeaa7' },
+  transport: { l:'Transport', i:'🚗', c:'#55efc4' },
+  transfers: { l:'Transfers', i:'💸', c:'#636e72' },
 };
-var txs=[],activeF='all',_mid=null,_msel=null,_addCat=null,lastSynced='';
 
-function getSaved(){try{return JSON.parse(localStorage.getItem('ali_ov')||'{}')}catch(e){return{}}}
-function setSaved(d){try{localStorage.setItem('ali_ov',JSON.stringify(d))}catch(e){}}
-function getManual(){try{return JSON.parse(localStorage.getItem('ali_manual')||'[]')}catch(e){return[]}}
-function setManual(d){try{localStorage.setItem('ali_manual',JSON.stringify(d))}catch(e){}}
+const MONTHS = [
+  '2025-01','2025-02','2025-03','2025-04','2025-05','2025-06',
+  '2025-07','2025-08','2025-09','2025-10','2025-11','2025-12',
+  '2026-01','2026-02','2026-03'
+];
 
-async function init(){
-  try{
-    var r=await fetch('/api/sync');
-    if(r.status===401){showLogin();return;}
-    var data=await r.json();
-    if(data.error==='not_authenticated'){showLogin();return;}
-    var ov=getSaved();
-    txs=data.transactions.map(function(t){return Object.assign({},t,{category:ov[t.id]||t.category,manual:false})});
-    var manual=getManual();
-    manual.forEach(function(m){txs.push(m)});
-    txs.sort(function(a,b){return new Date(b.date)-new Date(a.date)});
-    lastSynced=data.synced;
-    showDashboard();
-  }catch(e){showLogin();}
+const MONTH_NAMES = {
+  '01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun',
+  '07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec'
+};
+
+const SALARY = 150;
+
+const TRIP_NAMES = {
+  '2025-04': '🇦🇪 Dubai Trip',
+  '2025-07': '🇸🇪 Sweden Trip',
+  '2025-08': '🇬🇧 London Trip',
+  '2025-10': '🇶🇦 Qatar Trip',
+  '2025-11': '🇦🇪 Dubai Trip',
+  '2026-02': '🇬🇧 London Trip',
+};
+
+// ════════════════════════════════════════════════════════
+// TRANSACTIONS
+// ════════════════════════════════════════════════════════
+const TXS = [
+// JAN 2025
+{id:'t1',date:'2025-01-01',merchant:'SOMI MUSC',amount:0.100,cat:'food',month:'2025-01'},
+{id:'t2',date:'2025-01-01',merchant:'Sherif Aly Ibrahim (Wallet)',amount:7.000,cat:'transfers',month:'2025-01'},
+{id:'t3',date:'2025-01-02',merchant:'FIRST FOOD SERVICE LLC',amount:18.000,cat:'food',month:'2025-01'},
+{id:'t4',date:'2025-01-02',merchant:'AHLAIN GHALLA INDS',amount:1.683,cat:'food',month:'2025-01'},
+{id:'t5',date:'2025-01-03',merchant:'TROPICAL JUICES ICE CREAM',amount:1.580,cat:'food',month:'2025-01'},
+{id:'t6',date:'2025-01-03',merchant:'SHELL SELECT AL BANDAR',amount:0.570,cat:'fuel',month:'2025-01'},
+{id:'t7',date:'2025-01-03',merchant:'ADIL AL BALUSHI TRAD',amount:3.900,cat:'food',month:'2025-01'},
+{id:'t8',date:'2025-01-04',merchant:'DamadahLtd (Steam)',amount:98.700,cat:'gaming',month:'2025-01'},
+{id:'t9',date:'2025-01-05',merchant:'KFC (Kuwait Food Co)',amount:3.550,cat:'food',month:'2025-01'},
+{id:'t10',date:'2025-01-05',merchant:"McDonald's Airport",amount:2.690,cat:'food',month:'2025-01'},
+{id:'t11',date:'2025-01-06',merchant:'Krispy Kreme',amount:1.080,cat:'food',month:'2025-01'},
+{id:'t12',date:'2025-01-06',merchant:'Steam Games',amount:1.180,cat:'gaming',month:'2025-01'},
+{id:'t13',date:'2025-01-06',merchant:'Shell Select Al Khoudh',amount:0.620,cat:'fuel',month:'2025-01'},
+{id:'t14',date:'2025-01-07',merchant:'KFC',amount:7.090,cat:'food',month:'2025-01'},
+{id:'t15',date:'2025-01-07',merchant:'Shell Select Al Bandar',amount:0.520,cat:'fuel',month:'2025-01'},
+{id:'t16',date:'2025-01-08',merchant:'Autogrill Middle East',amount:3.230,cat:'food',month:'2025-01'},
+{id:'t17',date:'2025-01-08',merchant:'Talabat',amount:15.420,cat:'food',month:'2025-01'},
+{id:'t18',date:'2025-01-09',merchant:'KFC 18 Nov Street',amount:5.300,cat:'food',month:'2025-01'},
+{id:'t19',date:'2025-01-09',merchant:'KFC 18 Nov Street',amount:1.400,cat:'food',month:'2025-01'},
+{id:'t20',date:'2025-01-11',merchant:'Shadi Alireza (Wallet)',amount:40.000,cat:'transfers',month:'2025-01'},
+{id:'t21',date:'2025-01-09',merchant:'DamadahLtd (x3 Gaming)',amount:281.400,cat:'gaming',month:'2025-01'},
+{id:'t22',date:'2025-01-09',merchant:'DamadahLtd (Gaming)',amount:2.620,cat:'gaming',month:'2025-01'},
+{id:'t23',date:'2025-01-09',merchant:'eToro',amount:88.270,cat:'personal',month:'2025-01'},
+{id:'t24',date:'2025-01-11',merchant:'Joker Burger and Sweet',amount:2.210,cat:'food',month:'2025-01'},
+{id:'t25',date:'2025-01-13',merchant:'Talabat',amount:5.300,cat:'food',month:'2025-01'},
+{id:'t26',date:'2025-01-13',merchant:'Talabat',amount:8.320,cat:'food',month:'2025-01'},
+{id:'t27',date:'2025-01-14',merchant:'Royal Oman Police',amount:60.000,cat:'transport',month:'2025-01'},
+{id:'t28',date:'2025-01-15',merchant:'Nissan Service Gala',amount:55.650,cat:'transport',month:'2025-01'},
+{id:'t29',date:'2025-01-15',merchant:'Khalid Khalfan Al Badri (Wallet)',amount:1.400,cat:'transfers',month:'2025-01'},
+{id:'t30',date:'2025-01-15',merchant:'Talabat',amount:15.390,cat:'food',month:'2025-01'},
+{id:'t31',date:'2025-01-15',merchant:'Nissan UD Service',amount:65.000,cat:'transport',month:'2025-01'},
+{id:'t32',date:'2025-01-15',merchant:'Sherif Aly Ibrahim (Wallet)',amount:8.000,cat:'transfers',month:'2025-01'},
+{id:'t33',date:'2025-01-14',merchant:'Microsoft',amount:3.500,cat:'personal',month:'2025-01'},
+{id:'t34',date:'2025-01-16',merchant:'Gaming Planet',amount:0.200,cat:'gaming',month:'2025-01'},
+{id:'t35',date:'2025-01-16',merchant:'Gaming Planet',amount:1.200,cat:'gaming',month:'2025-01'},
+{id:'t36',date:'2025-01-19',merchant:'Satish Rekha (Wallet)',amount:100.000,cat:'transfers',month:'2025-01'},
+{id:'t37',date:'2025-01-20',merchant:'Ace MUSC',amount:8.000,cat:'paddle',month:'2025-01'},
+{id:'t38',date:'2025-01-20',merchant:'Oman Oil - Ghala',amount:3.000,cat:'fuel',month:'2025-01'},
+{id:'t39',date:'2025-01-22',merchant:'Talabat',amount:7.910,cat:'food',month:'2025-01'},
+{id:'t40',date:'2025-01-22',merchant:'Hilal Burger',amount:28.000,cat:'food',month:'2025-01'},
+{id:'t41',date:'2025-01-22',merchant:'KFC Maabela',amount:1.550,cat:'food',month:'2025-01'},
+{id:'t42',date:'2025-01-22',merchant:'Oman Oil - Gala',amount:9.800,cat:'fuel',month:'2025-01'},
+{id:'t43',date:'2025-01-23',merchant:'Khalid Alhadhabi Trad',amount:0.900,cat:'food',month:'2025-01'},
+{id:'t44',date:'2025-01-23',merchant:'Adil Al Balushi Trad',amount:3.900,cat:'food',month:'2025-01'},
+{id:'t45',date:'2025-01-23',merchant:'SOMI MUSC',amount:0.100,cat:'food',month:'2025-01'},
+{id:'t46',date:'2025-01-23',merchant:'Mohammed Farook (Wallet)',amount:1.000,cat:'transfers',month:'2025-01'},
+{id:'t47',date:'2025-01-25',merchant:'Talabat',amount:4.470,cat:'food',month:'2025-01'},
+{id:'t48',date:'2025-01-24',merchant:'Antalya Turkish Coffee',amount:0.100,cat:'food',month:'2025-01'},
+{id:'t49',date:'2025-01-25',merchant:'Talabat',amount:6.670,cat:'food',month:'2025-01'},
+{id:'t50',date:'2025-01-26',merchant:'Talabat',amount:12.540,cat:'food',month:'2025-01'},
+{id:'t51',date:'2025-01-26',merchant:'Talabat',amount:5.990,cat:'food',month:'2025-01'},
+{id:'t52',date:'2025-01-27',merchant:'ROP Traffic Services',amount:15.000,cat:'transport',month:'2025-01'},
+{id:'t53',date:'2025-01-27',merchant:'Transfer · 766 18203 269 59',amount:17.400,cat:'transfers',month:'2025-01'},
+{id:'t54',date:'2025-01-27',merchant:'Talabat',amount:6.292,cat:'food',month:'2025-01'},
+{id:'t55',date:'2025-01-27',merchant:'Ace MUSC',amount:6.950,cat:'paddle',month:'2025-01'},
+{id:'t56',date:'2025-01-27',merchant:'Adam Bakery',amount:2.400,cat:'food',month:'2025-01'},
+{id:'t57',date:'2025-01-28',merchant:"McDonald's",amount:4.960,cat:'food',month:'2025-01'},
+{id:'t58',date:'2025-01-28',merchant:'Talabat',amount:14.257,cat:'food',month:'2025-01'},
+// FEB 2025
+{id:'t59',date:'2025-01-31',merchant:'Global Village Partners (Dubai)',amount:4.620,cat:'trips',month:'2025-02'},
+{id:'t60',date:'2025-01-31',merchant:'Revolut',amount:10.070,cat:'personal',month:'2025-02'},
+{id:'t61',date:'2025-02-01',merchant:'Healthy Bar',amount:4.000,cat:'food',month:'2025-02'},
+{id:'t62',date:'2025-02-01',merchant:'Talabat',amount:14.544,cat:'food',month:'2025-02'},
+{id:'t63',date:'2025-02-02',merchant:'Shell Oman - North Azaiba',amount:5.000,cat:'fuel',month:'2025-02'},
+{id:'t64',date:'2025-02-02',merchant:'Talabat',amount:2.080,cat:'food',month:'2025-02'},
+{id:'t65',date:'2025-02-01',merchant:'Talabat',amount:14.656,cat:'food',month:'2025-02'},
+{id:'t66',date:'2025-02-01',merchant:'Talabat',amount:2.196,cat:'food',month:'2025-02'},
+{id:'t67',date:'2025-02-05',merchant:"McDonald's",amount:6.322,cat:'food',month:'2025-02'},
+{id:'t68',date:'2025-02-06',merchant:'Al Maha - 106',amount:20.000,cat:'fuel',month:'2025-02'},
+{id:'t69',date:'2025-02-06',merchant:'Talabat',amount:4.432,cat:'food',month:'2025-02'},
+{id:'t70',date:'2025-02-06',merchant:'Talabat',amount:4.616,cat:'food',month:'2025-02'},
+{id:'t71',date:'2025-02-08',merchant:'Ace MUSC',amount:25.000,cat:'paddle',month:'2025-02'},
+{id:'t72',date:'2025-02-08',merchant:'Talabat',amount:7.700,cat:'food',month:'2025-02'},
+{id:'t73',date:'2025-02-08',merchant:'Talabat',amount:0.520,cat:'food',month:'2025-02'},
+{id:'t74',date:'2025-02-09',merchant:'Alwaleed Nasser Al Amri (Wallet)',amount:410.000,cat:'transfers',month:'2025-02'},
+{id:'t75',date:'2025-02-13',merchant:'Canary Electronics',amount:1.500,cat:'shopping',month:'2025-02'},
+{id:'t76',date:'2025-02-13',merchant:'SKYC STORE',amount:3.910,cat:'shopping',month:'2025-02'},
+{id:'t77',date:'2025-02-14',merchant:'Microsoft',amount:3.500,cat:'personal',month:'2025-02'},
+{id:'t78',date:'2025-02-17',merchant:'Talabat',amount:8.220,cat:'food',month:'2025-02'},
+{id:'t79',date:'2025-02-17',merchant:'Talabat',amount:2.696,cat:'food',month:'2025-02'},
+{id:'t80',date:'2025-02-16',merchant:'Riot Games',amount:20.760,cat:'gaming',month:'2025-02'},
+{id:'t81',date:'2025-02-19',merchant:'Talabat',amount:8.220,cat:'food',month:'2025-02'},
+{id:'t82',date:'2025-02-19',merchant:'Talabat',amount:2.696,cat:'food',month:'2025-02'},
+{id:'t83',date:'2025-02-19',merchant:'ProPhysio',amount:25.000,cat:'personal',month:'2025-02'},
+{id:'t84',date:'2025-02-19',merchant:'Amazon MKTPL',amount:53.110,cat:'shopping',month:'2025-02'},
+{id:'t85',date:'2025-02-20',merchant:'Ace MUSC',amount:6.675,cat:'paddle',month:'2025-02'},
+{id:'t86',date:'2025-02-22',merchant:'Alwaleed Nasser Al Amri (Wallet)',amount:275.000,cat:'transfers',month:'2025-02'},
+{id:'t87',date:'2025-02-22',merchant:'Mohammed Saif Uddin (Wallet)',amount:35.000,cat:'transfers',month:'2025-02'},
+{id:'t88',date:'2025-02-22',merchant:'Talabat',amount:15.343,cat:'food',month:'2025-02'},
+{id:'t89',date:'2025-02-23',merchant:'Talabat',amount:3.480,cat:'food',month:'2025-02'},
+{id:'t90',date:'2025-02-24',merchant:'Riot Games',amount:8.290,cat:'gaming',month:'2025-02'},
+{id:'t91',date:'2025-02-24',merchant:'MYCRS',amount:10.420,cat:'gaming',month:'2025-02'},
+{id:'t92',date:'2025-02-23',merchant:'Amazon MKTPL',amount:24.340,cat:'shopping',month:'2025-02'},
+{id:'t93',date:'2025-02-27',merchant:'Talabat',amount:2.070,cat:'food',month:'2025-02'},
+// MAR 2025
+{id:'t94',date:'2025-02-28',merchant:'Ace MUSC',amount:0.400,cat:'paddle',month:'2025-03'},
+{id:'t95',date:'2025-03-01',merchant:'Ace MUSC',amount:0.400,cat:'paddle',month:'2025-03'},
+{id:'t96',date:'2025-03-05',merchant:'Gaming Planet',amount:1.400,cat:'gaming',month:'2025-03'},
+{id:'t97',date:'2025-03-09',merchant:"McDonald's",amount:1.198,cat:'food',month:'2025-03'},
+{id:'t98',date:'2025-03-13',merchant:'Ace MUSC',amount:25.000,cat:'paddle',month:'2025-03'},
+// APR 2025
+{id:'t99',date:'2025-03-31',merchant:'Amazon Mktplace',amount:50.500,cat:'shopping',month:'2025-04'},
+{id:'t100',date:'2025-04-02',merchant:'Shell Oman - North Azaiba',amount:7.600,cat:'fuel',month:'2025-04'},
+{id:'t101',date:'2025-04-02',merchant:'Talabat',amount:3.250,cat:'food',month:'2025-04'},
+{id:'t102',date:'2025-04-02',merchant:'Talabat',amount:2.148,cat:'food',month:'2025-04'},
+{id:'t103',date:'2025-04-02',merchant:'t4trade',amount:78.930,cat:'personal',month:'2025-04'},
+{id:'t104',date:'2025-04-07',merchant:'Talabat',amount:8.680,cat:'food',month:'2025-04'},
+{id:'t105',date:'2025-04-05',merchant:'Microsoft',amount:3.500,cat:'personal',month:'2025-04'},
+{id:'t106',date:'2025-04-07',merchant:'Blade Barber Azai',amount:7.750,cat:'personal',month:'2025-04'},
+{id:'t107',date:'2025-04-07',merchant:'DHL',amount:5.990,cat:'shopping',month:'2025-04'},
+{id:'t108',date:'2025-04-07',merchant:'Talabat',amount:13.913,cat:'food',month:'2025-04'},
+{id:'t109',date:'2025-04-08',merchant:'KFC Maabela Gateway',amount:1.200,cat:'food',month:'2025-04'},
+{id:'t110',date:'2025-04-07',merchant:'Riot Games',amount:15.340,cat:'gaming',month:'2025-04'},
+{id:'t111',date:'2025-04-08',merchant:'Shell Select Al Bandar',amount:0.890,cat:'fuel',month:'2025-04'},
+{id:'t112',date:'2025-04-09',merchant:'Talabat',amount:4.950,cat:'food',month:'2025-04'},
+{id:'t113',date:'2025-04-09',merchant:'Ace MUSC',amount:25.000,cat:'paddle',month:'2025-04'},
+{id:'t114',date:'2025-04-09',merchant:'Tea Corner Azaiba',amount:0.500,cat:'food',month:'2025-04'},
+{id:'t115',date:'2025-04-08',merchant:'SEGPAY.COM',amount:0.400,cat:'personal',month:'2025-04'},
+{id:'t116',date:'2025-04-07',merchant:'PSMHELP.NET',amount:11.820,cat:'personal',month:'2025-04'},
+{id:'t117',date:'2025-04-11',merchant:'Ali Abbas Iqbal Najwani (Wallet)',amount:2.800,cat:'transfers',month:'2025-04'},
+{id:'t118',date:'2025-04-10',merchant:'Baskin Robbins',amount:3.400,cat:'food',month:'2025-04'},
+{id:'t119',date:'2025-04-11',merchant:'MO Subs and Pizza',amount:5.800,cat:'food',month:'2025-04'},
+{id:'t120',date:'2025-04-11',merchant:'Alwaleed Nasser Al Amri (Wallet)',amount:130.000,cat:'transfers',month:'2025-04'},
+{id:'t121',date:'2025-04-13',merchant:'Talabat',amount:5.900,cat:'food',month:'2025-04'},
+{id:'t122',date:'2025-04-15',merchant:'Talabat',amount:11.653,cat:'food',month:'2025-04'},
+{id:'t123',date:'2025-04-15',merchant:'SOMI MUSC',amount:1.365,cat:'food',month:'2025-04'},
+{id:'t124',date:'2025-04-15',merchant:'Oman Oil Marketing Co',amount:9.700,cat:'fuel',month:'2025-04'},
+{id:'t125',date:'2025-04-17',merchant:'Cinnabon',amount:7.230,cat:'food',month:'2025-04'},
+{id:'t126',date:'2025-04-16',merchant:'SEGPAY.COM',amount:1.180,cat:'personal',month:'2025-04'},
+{id:'t127',date:'2025-04-17',merchant:'Riot Games',amount:4.510,cat:'gaming',month:'2025-04'},
+{id:'t128',date:'2025-04-20',merchant:'New Debit Card + Courier',amount:3.250,cat:'personal',month:'2025-04'},
+{id:'t129',date:'2025-04-23',merchant:'Oman Oil - Falaij',amount:8.700,cat:'fuel',month:'2025-04'},
+{id:'t130',date:'2025-04-23',merchant:'Dubai - ATM Cash',amount:73.559,cat:'trips',month:'2025-04'},
+{id:'t131',date:'2025-04-24',merchant:'Debit Card Annual Fee',amount:1.000,cat:'personal',month:'2025-04'},
+{id:'t132',date:'2025-04-24',merchant:'Alwaleed Nasser Al Amri (Wallet)',amount:130.000,cat:'transfers',month:'2025-04'},
+{id:'t133',date:'2025-04-24',merchant:'Alwaleed Nasser Al Amri (Wallet)',amount:475.000,cat:'transfers',month:'2025-04'},
+{id:'t134',date:'2025-04-24',merchant:'Zuma Restaurants (Dubai) 🇦🇪',amount:202.390,cat:'trips',month:'2025-04'},
+{id:'t135',date:'2025-04-24',merchant:'Top Golf (Dubai) 🇦🇪',amount:11.830,cat:'trips',month:'2025-04'},
+{id:'t136',date:'2025-04-25',merchant:'Oman Oil Al Ansab',amount:5.400,cat:'fuel',month:'2025-04'},
+{id:'t137',date:'2025-04-24',merchant:'Shell Oman - Hoor (Dubai) 🇦🇪',amount:2.280,cat:'trips',month:'2025-04'},
+{id:'t138',date:'2025-04-24',merchant:'Kamel Shoja Car Access (Dubai) 🇦🇪',amount:227.850,cat:'trips',month:'2025-04'},
+{id:'t139',date:'2025-04-23',merchant:'V Hotel Curio Collection (Dubai) 🇦🇪',amount:87.740,cat:'trips',month:'2025-04'},
+{id:'t140',date:'2025-04-26',merchant:'Revolut',amount:42.200,cat:'personal',month:'2025-04'},
+{id:'t141',date:'2025-04-28',merchant:'Alwaleed Nasser Al Amri (Wallet)',amount:425.000,cat:'transfers',month:'2025-04'},
+{id:'t142',date:'2025-04-28',merchant:'Alwaleed Nasser Al Amri (Wallet)',amount:500.000,cat:'transfers',month:'2025-04'},
+{id:'t143',date:'2025-04-29',merchant:"McDonald's",amount:6.053,cat:'food',month:'2025-04'},
+{id:'t144',date:'2025-04-30',merchant:'Shell Oman Al Bandar',amount:3.000,cat:'fuel',month:'2025-04'},
+// MAY 2025
+{id:'t145',date:'2025-05-01',merchant:"McDonald's",amount:5.505,cat:'food',month:'2025-05'},
+{id:'t146',date:'2025-04-29',merchant:'eTraffic Fine',amount:73.780,cat:'transport',month:'2025-05'},
+{id:'t147',date:'2025-05-01',merchant:'SEGPAY.COM',amount:1.180,cat:'personal',month:'2025-05'},
+{id:'t148',date:'2025-05-02',merchant:'SEGPAY.COM',amount:13.800,cat:'personal',month:'2025-05'},
+{id:'t149',date:'2025-05-01',merchant:'Talabat',amount:14.656,cat:'food',month:'2025-05'},
+{id:'t150',date:'2025-05-05',merchant:'Tea Hut',amount:0.100,cat:'food',month:'2025-05'},
+{id:'t151',date:'2025-05-06',merchant:'Taghreed A. Fatt (Transfer)',amount:37.000,cat:'transfers',month:'2025-05'},
+{id:'t152',date:'2025-05-06',merchant:'Muscat Sports Service',amount:0.600,cat:'personal',month:'2025-05'},
+{id:'t153',date:'2025-05-07',merchant:'Muscat Sports Service',amount:0.400,cat:'personal',month:'2025-05'},
+{id:'t154',date:'2025-05-06',merchant:'eTraffic Fine',amount:35.000,cat:'transport',month:'2025-05'},
+{id:'t155',date:'2025-05-08',merchant:'Muscat Sports Service',amount:0.200,cat:'personal',month:'2025-05'},
+{id:'t156',date:'2025-05-09',merchant:'Tea Corner Azaiba',amount:0.500,cat:'food',month:'2025-05'},
+{id:'t157',date:'2025-05-12',merchant:"McDonald's",amount:7.576,cat:'food',month:'2025-05'},
+{id:'t158',date:'2025-05-14',merchant:'Felicia Omayoza (Wallet)',amount:30.000,cat:'transfers',month:'2025-05'},
+{id:'t159',date:'2025-05-14',merchant:'Syed Tawqeer Ahmed (Wallet)',amount:5.500,cat:'transfers',month:'2025-05'},
+{id:'t160',date:'2025-05-15',merchant:'Taghreed A. Fatt (Transfer)',amount:90.000,cat:'transfers',month:'2025-05'},
+{id:'t161',date:'2025-05-16',merchant:'Hisham Abdullah Al Kalbani (Wallet)',amount:160.000,cat:'transfers',month:'2025-05'},
+{id:'t162',date:'2025-05-18',merchant:"McDonald's",amount:5.504,cat:'food',month:'2025-05'},
+{id:'t163',date:'2025-05-18',merchant:'Alwaleed Nasser Al Amri (Wallet)',amount:7.000,cat:'transfers',month:'2025-05'},
+{id:'t164',date:'2025-05-18',merchant:"McDonald's",amount:1.198,cat:'food',month:'2025-05'},
+{id:'t165',date:'2025-05-18',merchant:'Talabat',amount:3.690,cat:'food',month:'2025-05'},
+{id:'t166',date:'2025-05-19',merchant:'Oman Oil Marketing Co',amount:6.595,cat:'fuel',month:'2025-05'},
+{id:'t167',date:'2025-05-21',merchant:'Transfer · 766 19240 269 85',amount:17.400,cat:'transfers',month:'2025-05'},
+{id:'t168',date:'2025-05-21',merchant:'Talabat',amount:17.890,cat:'food',month:'2025-05'},
+{id:'t169',date:'2025-05-24',merchant:'VOX Cinemas',amount:0.400,cat:'personal',month:'2025-05'},
+{id:'t170',date:'2025-05-28',merchant:'Burger King - Al Khuwaij',amount:7.780,cat:'food',month:'2025-05'},
+// JUN 2025
+{id:'t171',date:'2025-05-30',merchant:'Shell Select Azaiba',amount:1.170,cat:'fuel',month:'2025-06'},
+{id:'t172',date:'2025-05-31',merchant:'Tea Corner Azaiba',amount:0.525,cat:'food',month:'2025-06'},
+{id:'t173',date:'2025-06-01',merchant:'New Silk Route Restaurant',amount:28.800,cat:'food',month:'2025-06'},
+{id:'t174',date:'2025-06-03',merchant:'SOMI MUSC',amount:1.150,cat:'food',month:'2025-06'},
+{id:'t175',date:'2025-06-04',merchant:'New Silk Route Restaurant',amount:41.700,cat:'food',month:'2025-06'},
+{id:'t176',date:'2025-06-08',merchant:"McDonald's",amount:6.422,cat:'food',month:'2025-06'},
+{id:'t177',date:'2025-06-08',merchant:'Talabat',amount:2.290,cat:'food',month:'2025-06'},
+{id:'t178',date:'2025-06-10',merchant:'Elegant Art LLC',amount:5.830,cat:'shopping',month:'2025-06'},
+{id:'t179',date:'2025-06-09',merchant:'Alibaba.com Singapore',amount:239.850,cat:'shopping',month:'2025-06'},
+{id:'t180',date:'2025-06-11',merchant:'Talabat',amount:5.910,cat:'food',month:'2025-06'},
+{id:'t181',date:'2025-06-15',merchant:"McDonald's",amount:5.396,cat:'food',month:'2025-06'},
+{id:'t182',date:'2025-06-15',merchant:'Magic Planet',amount:1.160,cat:'personal',month:'2025-06'},
+{id:'t183',date:'2025-06-19',merchant:'Shell Select Al Bandar',amount:0.370,cat:'fuel',month:'2025-06'},
+{id:'t184',date:'2025-06-22',merchant:'Shell Select Al Bandar',amount:1.570,cat:'fuel',month:'2025-06'},
+{id:'t185',date:'2025-06-22',merchant:'SEGPAY.COM',amount:1.180,cat:'personal',month:'2025-06'},
+// JUL 2025
+{id:'t186',date:'2025-07-02',merchant:'Talabat',amount:10.050,cat:'food',month:'2025-07'},
+{id:'t187',date:'2025-07-03',merchant:'Oman Oil - Mawleh',amount:10.100,cat:'fuel',month:'2025-07'},
+{id:'t188',date:'2025-07-03',merchant:'Talabat',amount:6.890,cat:'food',month:'2025-07'},
+{id:'t189',date:'2025-07-10',merchant:'Talal Majid Al Hajr (Wallet)',amount:500.000,cat:'transfers',month:'2025-07'},
+{id:'t190',date:'2025-07-10',merchant:'Talal Majid Al Hajr (Wallet)',amount:100.000,cat:'transfers',month:'2025-07'},
+{id:'t191',date:'2025-07-12',merchant:'Chibuzor Ekekwe (Transfer)',amount:1.300,cat:'transfers',month:'2025-07'},
+{id:'t192',date:'2025-07-10',merchant:'Segpay',amount:1.300,cat:'personal',month:'2025-07'},
+{id:'t193',date:'2025-07-17',merchant:'Inflight Internet Service ✈️',amount:2.370,cat:'trips',month:'2025-07'},
+{id:'t194',date:'2025-07-18',merchant:'TFL Travel London 🇬🇧',amount:1.490,cat:'trips',month:'2025-07'},
+{id:'t195',date:'2025-07-22',merchant:'TFL Unpaid Fare 🇬🇧',amount:4.750,cat:'trips',month:'2025-07'},
+{id:'t196',date:'2025-07-26',merchant:'Borjes Blommor (Stockholm) 🇸🇪',amount:15.590,cat:'trips',month:'2025-07'},
+{id:'t197',date:'2025-07-26',merchant:'Motorrocken Festival (Stockholm) 🇸🇪',amount:1.460,cat:'trips',month:'2025-07'},
+{id:'t198',date:'2025-07-26',merchant:'TNF Stockholm 🇸🇪',amount:16.590,cat:'trips',month:'2025-07'},
+{id:'t199',date:'2025-07-26',merchant:'Laangsjo Grillen (Stockholm) 🇸🇪',amount:1.880,cat:'trips',month:'2025-07'},
+{id:'t200',date:'2025-07-26',merchant:'Crying Tiger (Stockholm) 🇸🇪',amount:9.980,cat:'trips',month:'2025-07'},
+{id:'t201',date:'2025-07-26',merchant:'Uber (abroad)',amount:7.900,cat:'trips',month:'2025-07'},
+{id:'t202',date:'2025-07-27',merchant:'Mohammed Said Al Subhy (Wallet)',amount:350.000,cat:'transfers',month:'2025-07'},
+{id:'t203',date:'2025-07-26',merchant:'Taghreed A. Fatt (Transfer)',amount:34.025,cat:'transfers',month:'2025-07'},
+// AUG 2025
+{id:'t204',date:'2025-07-31',merchant:'Ascot Hotel London 🇬🇧',amount:460.920,cat:'trips',month:'2025-08'},
+{id:'t205',date:'2025-08-02',merchant:"Shah's Halal Food (London) 🇬🇧",amount:15.210,cat:'trips',month:'2025-08'},
+{id:'t206',date:'2025-08-01',merchant:'Abdul Aziz Ibrahim Al Balushi (Wallet)',amount:88.000,cat:'transfers',month:'2025-08'},
+{id:'t207',date:'2025-08-03',merchant:'Qutada Abdullah Al Fazl (Wallet)',amount:63.300,cat:'transfers',month:'2025-08'},
+{id:'t208',date:'2025-08-03',merchant:'Mohammed Nasser Al Mawali (Wallet)',amount:500.000,cat:'transfers',month:'2025-08'},
+{id:'t209',date:'2025-08-03',merchant:'Mohammed Nasser Al Mawali (Wallet)',amount:20.000,cat:'transfers',month:'2025-08'},
+{id:'t210',date:'2025-08-04',merchant:'DK CPH Gasoline (Copenhagen) 🇩🇰',amount:11.310,cat:'trips',month:'2025-08'},
+{id:'t211',date:'2025-08-06',merchant:'Ace MUSC',amount:9.300,cat:'paddle',month:'2025-08'},
+{id:'t212',date:'2025-08-06',merchant:'Top Bous',amount:6.000,cat:'food',month:'2025-08'},
+{id:'t213',date:'2025-08-07',merchant:'Tea Path',amount:1.155,cat:'food',month:'2025-08'},
+{id:'t214',date:'2025-08-05',merchant:'Talabat',amount:17.390,cat:'food',month:'2025-08'},
+{id:'t215',date:'2025-08-07',merchant:'Al Luban Land MUSC',amount:17.490,cat:'shopping',month:'2025-08'},
+{id:'t216',date:'2025-08-07',merchant:'Rules Coffee Qurum',amount:5.800,cat:'food',month:'2025-08'},
+{id:'t217',date:'2025-08-07',merchant:'Borders - Mall of Oman',amount:25.200,cat:'shopping',month:'2025-08'},
+{id:'t218',date:'2025-08-08',merchant:'Izz Al Mustaqbal',amount:12.600,cat:'food',month:'2025-08'},
+{id:'t219',date:'2025-08-07',merchant:'Gaming Planet',amount:0.200,cat:'gaming',month:'2025-08'},
+{id:'t220',date:'2025-08-08',merchant:'Excellent Trade and Inv',amount:6.563,cat:'shopping',month:'2025-08'},
+{id:'t221',date:'2025-08-09',merchant:'Oman Oil - Ghoubra Beach',amount:12.300,cat:'fuel',month:'2025-08'},
+{id:'t222',date:'2025-08-10',merchant:'New Silk Route Restaurant',amount:27.888,cat:'food',month:'2025-08'},
+{id:'t223',date:'2025-08-10',merchant:'Idris Ahmed Al Balushi (Wallet)',amount:5.900,cat:'transfers',month:'2025-08'},
+{id:'t224',date:'2025-08-10',merchant:'Rules Coffee Qurum',amount:1.200,cat:'food',month:'2025-08'},
+{id:'t225',date:'2025-08-09',merchant:'Amazon MKTPL',amount:45.630,cat:'shopping',month:'2025-08'},
+{id:'t226',date:'2025-08-07',merchant:'eTraffic Fine',amount:115.000,cat:'transport',month:'2025-08'},
+{id:'t227',date:'2025-08-09',merchant:'Amazon MKTPL',amount:95.830,cat:'shopping',month:'2025-08'},
+{id:'t228',date:'2025-08-11',merchant:'Rules Coffee Qurum',amount:1.200,cat:'food',month:'2025-08'},
+{id:'t229',date:'2025-08-11',merchant:'Excellent Trade and Inv',amount:10.395,cat:'shopping',month:'2025-08'},
+{id:'t230',date:'2025-08-10',merchant:'Talabat',amount:15.170,cat:'food',month:'2025-08'},
+{id:'t231',date:'2025-08-14',merchant:'Talabat',amount:3.448,cat:'food',month:'2025-08'},
+{id:'t232',date:'2025-08-14',merchant:'KIKS',amount:1.200,cat:'shopping',month:'2025-08'},
+{id:'t233',date:'2025-08-14',merchant:'First Food Service LLC',amount:30.000,cat:'food',month:'2025-08'},
+{id:'t234',date:'2025-08-14',merchant:'Cold Stone',amount:8.400,cat:'food',month:'2025-08'},
+{id:'t235',date:'2025-08-15',merchant:'Mohammed Nasser Al Mawali (Wallet)',amount:138.000,cat:'transfers',month:'2025-08'},
+{id:'t236',date:'2025-08-16',merchant:'Oman Oil - Mawleh',amount:7.000,cat:'fuel',month:'2025-08'},
+{id:'t237',date:'2025-08-17',merchant:'Talabat',amount:3.690,cat:'food',month:'2025-08'},
+{id:'t238',date:'2025-08-20',merchant:'Al Luban Land MUSC',amount:4.000,cat:'shopping',month:'2025-08'},
+{id:'t239',date:'2025-08-20',merchant:'Baskin Robbins Bous',amount:4.300,cat:'food',month:'2025-08'},
+{id:'t240',date:'2025-08-24',merchant:'Oman Oil - Ghoubra Beach',amount:12.300,cat:'fuel',month:'2025-08'},
+{id:'t241',date:'2025-08-23',merchant:'Amazon Mktplace',amount:43.400,cat:'shopping',month:'2025-08'},
+{id:'t242',date:'2025-08-25',merchant:'Top Bous',amount:1.300,cat:'food',month:'2025-08'},
+{id:'t243',date:'2025-08-26',merchant:'Talabat',amount:14.980,cat:'food',month:'2025-08'},
+{id:'t244',date:'2025-08-26',merchant:'Ace MUSC',amount:6.075,cat:'paddle',month:'2025-08'},
+{id:'t245',date:'2025-08-24',merchant:'Remal (Gaming)',amount:4.200,cat:'gaming',month:'2025-08'},
+{id:'t246',date:'2025-08-25',merchant:'First Class Spa',amount:12.250,cat:'personal',month:'2025-08'},
+{id:'t247',date:'2025-08-24',merchant:'Omantel Mobile App',amount:48.000,cat:'personal',month:'2025-08'},
+{id:'t248',date:'2025-08-27',merchant:'Top Bous',amount:2.500,cat:'food',month:'2025-08'},
+{id:'t249',date:'2025-08-27',merchant:"McDonald's",amount:7.650,cat:'food',month:'2025-08'},
+{id:'t250',date:'2025-08-25',merchant:'Dokan Application Co',amount:39.550,cat:'gaming',month:'2025-08'},
+{id:'t251',date:'2025-08-25',merchant:'Remal (Gaming)',amount:13.460,cat:'gaming',month:'2025-08'},
+{id:'t252',date:'2025-08-27',merchant:'Modern Concepts Entp',amount:0.300,cat:'shopping',month:'2025-08'},
+{id:'t253',date:'2025-08-31',merchant:'Oman Oil - Ghoubra Beach',amount:8.100,cat:'fuel',month:'2025-08'},
+{id:'t254',date:'2025-08-31',merchant:'Sultan Center Azaiba',amount:2.385,cat:'shopping',month:'2025-08'},
+{id:'t255',date:'2025-08-31',merchant:'Baskin Robbins',amount:2.600,cat:'food',month:'2025-08'},
+{id:'t256',date:'2025-08-31',merchant:'LikeCard (Gaming)',amount:12.580,cat:'gaming',month:'2025-08'},
+{id:'t257',date:'2025-08-31',merchant:'Remal (Gaming)',amount:12.100,cat:'gaming',month:'2025-08'},
+{id:'t258',date:'2025-08-31',merchant:'Muscat Livestock',amount:9.630,cat:'food',month:'2025-08'},
+{id:'t259',date:'2025-08-31',merchant:'Apple.com/Bill',amount:9.860,cat:'personal',month:'2025-08'},
+// SEP 2025
+{id:'t260',date:'2025-09-06',merchant:'Talabat',amount:2.500,cat:'food',month:'2025-09'},
+{id:'t261',date:'2025-09-07',merchant:"Hardee's Ghubra",amount:8.650,cat:'food',month:'2025-09'},
+{id:'t262',date:'2025-09-07',merchant:'Ahlain Qurum Jabal',amount:0.350,cat:'food',month:'2025-09'},
+{id:'t263',date:'2025-09-06',merchant:'Dokan Application Co',amount:39.550,cat:'gaming',month:'2025-09'},
+{id:'t264',date:'2025-09-06',merchant:'Remal (Gaming)',amount:12.100,cat:'gaming',month:'2025-09'},
+{id:'t265',date:'2025-09-06',merchant:'Dokan Application Co',amount:21.750,cat:'gaming',month:'2025-09'},
+{id:'t266',date:'2025-09-08',merchant:'Ajeen Khoud SQU',amount:0.500,cat:'food',month:'2025-09'},
+{id:'t267',date:'2025-09-11',merchant:'Ahlain Qurum Jabal',amount:0.600,cat:'food',month:'2025-09'},
+{id:'t268',date:'2025-09-11',merchant:'Oman Oil Marketing Co',amount:11.603,cat:'fuel',month:'2025-09'},
+{id:'t269',date:'2025-09-11',merchant:'Ajeen Khoud SQU',amount:0.800,cat:'food',month:'2025-09'},
+{id:'t270',date:'2025-09-11',merchant:'Lebanese Village',amount:1.500,cat:'food',month:'2025-09'},
+{id:'t271',date:'2025-09-11',merchant:'Talabat',amount:8.029,cat:'food',month:'2025-09'},
+{id:'t272',date:'2025-09-12',merchant:'Omantel Mobile App (x4)',amount:19.470,cat:'personal',month:'2025-09'},
+{id:'t273',date:'2025-09-14',merchant:'Shell Select Al Bandar',amount:0.650,cat:'fuel',month:'2025-09'},
+{id:'t274',date:'2025-09-14',merchant:'Adil Al Balushi Trad',amount:2.900,cat:'food',month:'2025-09'},
+{id:'t275',date:'2025-09-13',merchant:'First Class Spa',amount:5.250,cat:'personal',month:'2025-09'},
+{id:'t276',date:'2025-09-13',merchant:'Ajeen Khoud SQU',amount:0.800,cat:'food',month:'2025-09'},
+{id:'t277',date:'2025-09-13',merchant:'Lebanese Village',amount:0.500,cat:'food',month:'2025-09'},
+{id:'t278',date:'2025-09-13',merchant:'Bab Alhaara Juices',amount:1.000,cat:'food',month:'2025-09'},
+{id:'t279',date:'2025-09-13',merchant:'Tropical Mutt',amount:1.400,cat:'food',month:'2025-09'},
+{id:'t280',date:'2025-09-13',merchant:'Talabat',amount:8.029,cat:'food',month:'2025-09'},
+{id:'t281',date:'2025-09-14',merchant:'Burjeel Hospital',amount:2.000,cat:'personal',month:'2025-09'},
+{id:'t282',date:'2025-09-14',merchant:"McDonald's",amount:5.080,cat:'food',month:'2025-09'},
+{id:'t283',date:'2025-09-14',merchant:'Talabat',amount:4.030,cat:'food',month:'2025-09'},
+{id:'t284',date:'2025-09-13',merchant:'Remal (Gaming)',amount:5.260,cat:'gaming',month:'2025-09'},
+{id:'t285',date:'2025-09-15',merchant:'Ground Control Mall',amount:7.350,cat:'personal',month:'2025-09'},
+{id:'t286',date:'2025-09-15',merchant:'Elegant Art LLC',amount:3.045,cat:'shopping',month:'2025-09'},
+{id:'t287',date:'2025-09-15',merchant:'Remal (Gaming)',amount:12.110,cat:'gaming',month:'2025-09'},
+{id:'t288',date:'2025-09-19',merchant:'Tropical Mutt',amount:1.400,cat:'food',month:'2025-09'},
+{id:'t289',date:'2025-09-19',merchant:'Lebanese Village',amount:0.500,cat:'food',month:'2025-09'},
+{id:'t290',date:'2025-09-19',merchant:'Oman Oil Marketing Co',amount:8.000,cat:'fuel',month:'2025-09'},
+{id:'t291',date:'2025-09-21',merchant:'Antalya Turkish Coffee',amount:0.400,cat:'food',month:'2025-09'},
+{id:'t292',date:'2025-09-25',merchant:'Rules Coffee Qurum',amount:1.200,cat:'food',month:'2025-09'},
+{id:'t293',date:'2025-09-25',merchant:'Ibn Al Ajmai Disting',amount:8.200,cat:'shopping',month:'2025-09'},
+{id:'t294',date:'2025-09-25',merchant:'First Class Spa',amount:5.250,cat:'personal',month:'2025-09'},
+{id:'t295',date:'2025-09-26',merchant:'Oman Oil Marketing Co',amount:10.403,cat:'fuel',month:'2025-09'},
+{id:'t296',date:'2025-09-26',merchant:'Bab Alhaara Juices',amount:1.000,cat:'food',month:'2025-09'},
+{id:'t297',date:'2025-09-26',merchant:'Talabat',amount:7.410,cat:'food',month:'2025-09'},
+{id:'t298',date:'2025-09-27',merchant:'Flowof Life',amount:30.000,cat:'personal',month:'2025-09'},
+{id:'t299',date:'2025-09-27',merchant:'Talabat',amount:5.925,cat:'food',month:'2025-09'},
+{id:'t300',date:'2025-09-26',merchant:'Talabat',amount:9.060,cat:'food',month:'2025-09'},
+{id:'t301',date:'2025-09-27',merchant:'Shell Select Al Bandar',amount:1.000,cat:'fuel',month:'2025-09'},
+{id:'t302',date:'2025-09-26',merchant:'Omantel Mobile App',amount:6.490,cat:'personal',month:'2025-09'},
+{id:'t303',date:'2025-09-27',merchant:'Antalya Turkish Coffee',amount:0.900,cat:'food',month:'2025-09'},
+{id:'t304',date:'2025-09-28',merchant:'Ali Mustafa Ahmed Al Lawati (Wallet)',amount:5.000,cat:'transfers',month:'2025-09'},
+{id:'t305',date:'2025-09-28',merchant:'Talabat',amount:3.630,cat:'food',month:'2025-09'},
+{id:'t306',date:'2025-09-28',merchant:'Talabat',amount:5.925,cat:'food',month:'2025-09'},
+{id:'t307',date:'2025-09-29',merchant:'Game Arena',amount:0.900,cat:'gaming',month:'2025-09'},
+{id:'t308',date:'2025-09-28',merchant:'Ali Mustafa Ahmed Al Lawati (Wallet)',amount:1.530,cat:'transfers',month:'2025-09'},
+// OCT 2025
+{id:'t309',date:'2025-09-29',merchant:'Omantel Mobile App (x5)',amount:16.870,cat:'personal',month:'2025-10'},
+{id:'t310',date:'2025-10-04',merchant:'Grand Tire',amount:5.000,cat:'transport',month:'2025-10'},
+{id:'t311',date:'2025-10-05',merchant:'Oman Oil - Ghoubra Beach',amount:9.000,cat:'fuel',month:'2025-10'},
+{id:'t312',date:'2025-10-08',merchant:'Yasser Ali Fadhil (Wallet)',amount:10.000,cat:'transfers',month:'2025-10'},
+{id:'t313',date:'2025-10-09',merchant:'Karwa Taxi Doha 🇶🇦',amount:4.220,cat:'trips',month:'2025-10'},
+{id:'t314',date:'2025-10-09',merchant:'Karwa Taxi Doha 🇶🇦',amount:0.220,cat:'trips',month:'2025-10'},
+{id:'t315',date:'2025-10-11',merchant:'Karwa Taxi Doha 🇶🇦',amount:4.550,cat:'trips',month:'2025-10'},
+{id:'t316',date:'2025-10-09',merchant:'Karwa Taxi Doha 🇶🇦',amount:5.410,cat:'trips',month:'2025-10'},
+{id:'t317',date:'2025-10-09',merchant:'Karwa Taxi Doha 🇶🇦',amount:1.190,cat:'trips',month:'2025-10'},
+{id:'t318',date:'2025-10-12',merchant:'Al Luban Land MUSC',amount:3.780,cat:'shopping',month:'2025-10'},
+{id:'t319',date:'2025-10-12',merchant:'Talabat',amount:8.880,cat:'food',month:'2025-10'},
+{id:'t320',date:'2025-10-12',merchant:'Felisha Udo Johnson (Wallet)',amount:50.000,cat:'transfers',month:'2025-10'},
+{id:'t321',date:'2025-10-13',merchant:'Al Maha - 111',amount:5.414,cat:'fuel',month:'2025-10'},
+{id:'t322',date:'2025-10-13',merchant:'The Steak Company',amount:32.655,cat:'food',month:'2025-10'},
+{id:'t323',date:'2025-10-14',merchant:'Talabat',amount:2.190,cat:'food',month:'2025-10'},
+{id:'t324',date:'2025-10-12',merchant:'Karwa Taxi Doha 🇶🇦',amount:0.760,cat:'trips',month:'2025-10'},
+{id:'t325',date:'2025-10-13',merchant:'EA (Gaming)',amount:22.100,cat:'gaming',month:'2025-10'},
+{id:'t326',date:'2025-10-18',merchant:'Al Maha - 106',amount:5.000,cat:'fuel',month:'2025-10'},
+{id:'t327',date:'2025-10-18',merchant:'Al Luban Land MUSC',amount:4.650,cat:'shopping',month:'2025-10'},
+{id:'t328',date:'2025-10-18',merchant:'Oman Oil - Ghoubra',amount:5.000,cat:'fuel',month:'2025-10'},
+{id:'t329',date:'2025-10-21',merchant:'Al Maha - 111',amount:12.900,cat:'fuel',month:'2025-10'},
+{id:'t330',date:'2025-10-22',merchant:'Talabat',amount:3.900,cat:'food',month:'2025-10'},
+{id:'t331',date:'2025-10-23',merchant:'ONEIC Kiosk',amount:1.050,cat:'personal',month:'2025-10'},
+{id:'t332',date:'2025-10-23',merchant:'Remal (Gaming)',amount:2.100,cat:'gaming',month:'2025-10'},
+{id:'t333',date:'2025-10-24',merchant:'Remal (Gaming)',amount:2.100,cat:'gaming',month:'2025-10'},
+{id:'t334',date:'2025-10-25',merchant:'Aramex Muscat',amount:24.580,cat:'shopping',month:'2025-10'},
+{id:'t335',date:'2025-10-25',merchant:'Oman Oil Hay Al Taal',amount:5.000,cat:'fuel',month:'2025-10'},
+{id:'t336',date:'2025-10-23',merchant:'eTraffic Fines (x2)',amount:195.000,cat:'transport',month:'2025-10'},
+{id:'t337',date:'2025-10-26',merchant:'SEGPAY.COM',amount:1.180,cat:'personal',month:'2025-10'},
+// NOV 2025
+{id:'t338',date:'2025-11-01',merchant:'Osama Abdulkader Almonajed (Wallet)',amount:40.000,cat:'transfers',month:'2025-11'},
+{id:'t339',date:'2025-11-13',merchant:'Chick Buck Atha',amount:6.300,cat:'food',month:'2025-11'},
+{id:'t340',date:'2025-11-13',merchant:'Ahlain Ghobra Beach',amount:3.600,cat:'food',month:'2025-11'},
+{id:'t341',date:'2025-11-13',merchant:'Sky Line',amount:28.000,cat:'shopping',month:'2025-11'},
+{id:'t342',date:'2025-11-14',merchant:'Ghulam Jelani Enterprises',amount:0.750,cat:'food',month:'2025-11'},
+{id:'t343',date:'2025-11-14',merchant:'Oman Oil Musanah',amount:11.600,cat:'fuel',month:'2025-11'},
+{id:'t344',date:'2025-11-14',merchant:'Tea Time Cafeteria (Dubai) 🇦🇪',amount:1.180,cat:'trips',month:'2025-11'},
+{id:'t345',date:'2025-11-14',merchant:"Let's Fade Grooming (Dubai) 🇦🇪",amount:6.990,cat:'trips',month:'2025-11'},
+{id:'t346',date:'2025-11-14',merchant:'ENOC 1155 (Dubai) 🇦🇪',amount:7.740,cat:'trips',month:'2025-11'},
+{id:'t347',date:'2025-11-14',merchant:'Playtomic Padel (Dubai) 🇦🇪',amount:58.130,cat:'trips',month:'2025-11'},
+{id:'t348',date:'2025-11-14',merchant:'Eleven Valley Restaurant (Dubai) 🇦🇪',amount:10.110,cat:'trips',month:'2025-11'},
+{id:'t349',date:'2025-11-15',merchant:'SIB Sharjah ATM 🇦🇪',amount:5.510,cat:'trips',month:'2025-11'},
+{id:'t350',date:'2025-11-15',merchant:'Emarat Petrol (Dubai) 🇦🇪',amount:5.100,cat:'trips',month:'2025-11'},
+{id:'t351',date:'2025-11-15',merchant:'Smart Dubai Government 🇦🇪',amount:2.380,cat:'trips',month:'2025-11'},
+{id:'t352',date:'2025-11-14',merchant:'Back to Roots Coffee (Dubai) 🇦🇪',amount:1.080,cat:'trips',month:'2025-11'},
+{id:'t353',date:'2025-11-15',merchant:'Pickl Restaurant (Dubai) 🇦🇪',amount:10.850,cat:'trips',month:'2025-11'},
+{id:'t354',date:'2025-11-16',merchant:'DFC Retail Dev (Dubai) 🇦🇪',amount:10.750,cat:'trips',month:'2025-11'},
+{id:'t355',date:'2025-11-16',merchant:'Village Hub Grocery (Dubai) 🇦🇪',amount:4.410,cat:'trips',month:'2025-11'},
+{id:'t356',date:'2025-11-16',merchant:'Filli Cafe (Dubai) 🇦🇪',amount:2.040,cat:'trips',month:'2025-11'},
+{id:'t357',date:'2025-11-16',merchant:'Oman Oil - Airport',amount:13.000,cat:'fuel',month:'2025-11'},
+{id:'t358',date:'2025-11-15',merchant:'Five Guys (Dubai) 🇦🇪',amount:4.190,cat:'trips',month:'2025-11'},
+{id:'t359',date:'2025-11-16',merchant:'Govt of Sharjah 🇦🇪',amount:6.450,cat:'trips',month:'2025-11'},
+{id:'t360',date:'2025-11-16',merchant:'Raising Canes Alshaya (Dubai) 🇦🇪',amount:15.150,cat:'trips',month:'2025-11'},
+{id:'t361',date:'2025-11-16',merchant:'ENOC (Dubai) 🇦🇪',amount:10.390,cat:'trips',month:'2025-11'},
+{id:'t362',date:'2025-11-22',merchant:'Sohan Madushanka (Wallet)',amount:2.000,cat:'transfers',month:'2025-11'},
+{id:'t363',date:'2025-11-23',merchant:'Apple.com/Bill',amount:2.760,cat:'personal',month:'2025-11'},
+{id:'t364',date:'2025-11-24',merchant:'Apple.com/Bill',amount:9.460,cat:'personal',month:'2025-11'},
+{id:'t365',date:'2025-11-26',merchant:'Binaa Development',amount:25.368,cat:'personal',month:'2025-11'},
+{id:'t366',date:'2025-11-24',merchant:'Foreign Purchase (FS)',amount:0.790,cat:'trips',month:'2025-11'},
+{id:'t367',date:'2025-11-24',merchant:'Foreign Purchase (FS)',amount:3.950,cat:'trips',month:'2025-11'},
+{id:'t368',date:'2025-11-25',merchant:'Foreign Purchase (FS)',amount:1.580,cat:'trips',month:'2025-11'},
+{id:'t369',date:'2025-11-25',merchant:'Foreign Purchase (FS)',amount:19.310,cat:'trips',month:'2025-11'},
+{id:'t370',date:'2025-11-25',merchant:'Foreign Purchase (FS)',amount:1.970,cat:'trips',month:'2025-11'},
+{id:'t371',date:'2025-11-26',merchant:'Foreign Purchase (FS)',amount:5.900,cat:'trips',month:'2025-11'},
+{id:'t372',date:'2025-11-26',merchant:'Foreign Purchase (FS)',amount:6.290,cat:'trips',month:'2025-11'},
+{id:'t373',date:'2025-11-28',merchant:'Land Burger',amount:7.700,cat:'food',month:'2025-11'},
+{id:'t374',date:'2025-11-27',merchant:'Foreign Purchase (FS)',amount:6.300,cat:'trips',month:'2025-11'},
+{id:'t375',date:'2025-11-27',merchant:'Remal (Gaming)',amount:1.360,cat:'gaming',month:'2025-11'},
+{id:'t376',date:'2025-11-27',merchant:'LikeCard (Gaming)',amount:12.580,cat:'gaming',month:'2025-11'},
+{id:'t377',date:'2025-11-29',merchant:'Oman Oil - Ghoubra Beach',amount:9.200,cat:'fuel',month:'2025-11'},
+{id:'t378',date:'2025-11-29',merchant:'Hassan Iqbal Ali Al Lawati (Wallet)',amount:4.200,cat:'transfers',month:'2025-11'},
+{id:'t379',date:'2025-11-29',merchant:'Al Luban Land MUSC',amount:4.400,cat:'shopping',month:'2025-11'},
+{id:'t380',date:'2025-11-29',merchant:'Baskin Robbins Azai',amount:7.100,cat:'food',month:'2025-11'},
+{id:'t381',date:'2025-11-29',merchant:'Foreign Purchase (FS)',amount:1.770,cat:'trips',month:'2025-11'},
+{id:'t382',date:'2025-11-29',merchant:'Foreign Purchase (FS)',amount:5.900,cat:'trips',month:'2025-11'},
+{id:'t383',date:'2025-11-29',merchant:'Foreign Purchase (FS)',amount:6.290,cat:'trips',month:'2025-11'},
+// DEC 2025
+{id:'t384',date:'2025-11-30',merchant:'Foreign Purchase (FS)',amount:8.650,cat:'trips',month:'2025-12'},
+{id:'t385',date:'2025-12-01',merchant:'Talabat',amount:2.770,cat:'food',month:'2025-12'},
+{id:'t386',date:'2025-12-04',merchant:'Top Bous',amount:2.475,cat:'food',month:'2025-12'},
+{id:'t387',date:'2025-12-04',merchant:"McDonald's",amount:3.360,cat:'food',month:'2025-12'},
+{id:'t388',date:'2025-12-05',merchant:'Oman Oil - Ghoubra Beach',amount:12.100,cat:'fuel',month:'2025-12'},
+{id:'t389',date:'2025-12-05',merchant:'Talabat',amount:7.840,cat:'food',month:'2025-12'},
+{id:'t390',date:'2025-12-05',merchant:'Swift Shawarma',amount:10.395,cat:'food',month:'2025-12'},
+{id:'t391',date:'2025-12-05',merchant:'Ocean Mart Express',amount:2.200,cat:'food',month:'2025-12'},
+{id:'t392',date:'2025-12-04',merchant:'Talabat',amount:5.800,cat:'food',month:'2025-12'},
+{id:'t393',date:'2025-12-06',merchant:'Talabat',amount:6.770,cat:'food',month:'2025-12'},
+{id:'t394',date:'2025-12-06',merchant:'TAP (Gaming/Digital)',amount:126.000,cat:'gaming',month:'2025-12'},
+{id:'t395',date:'2025-12-08',merchant:'Al Azaiba Health Centre',amount:0.200,cat:'personal',month:'2025-12'},
+{id:'t396',date:'2025-12-12',merchant:"Khalid 'Abdallah Al-Ras (Wallet)",amount:45.500,cat:'transfers',month:'2025-12'},
+{id:'t397',date:'2025-12-12',merchant:'Ahlain Sohar Gate',amount:0.500,cat:'food',month:'2025-12'},
+{id:'t398',date:'2025-12-12',merchant:'Oman Oil Sohar Gate',amount:10.200,cat:'fuel',month:'2025-12'},
+{id:'t399',date:'2025-12-12',merchant:'Karak Raqeeb',amount:0.200,cat:'food',month:'2025-12'},
+{id:'t400',date:'2025-12-12',merchant:'Alsajwan International Shop',amount:6.636,cat:'shopping',month:'2025-12'},
+{id:'t401',date:'2025-12-14',merchant:'Oman Oil - Ghoubra Beach',amount:5.000,cat:'fuel',month:'2025-12'},
+{id:'t402',date:'2025-12-13',merchant:'Mohammed Nasser Al Mawali (Wallet)',amount:500.000,cat:'transfers',month:'2025-12'},
+{id:'t403',date:'2025-12-15',merchant:'Talabat',amount:3.890,cat:'food',month:'2025-12'},
+{id:'t404',date:'2025-12-14',merchant:'Talabat',amount:8.050,cat:'food',month:'2025-12'},
+{id:'t405',date:'2025-12-18',merchant:'Rules Coffee MUSC',amount:1.200,cat:'food',month:'2025-12'},
+{id:'t406',date:'2025-12-18',merchant:'Burner',amount:0.700,cat:'food',month:'2025-12'},
+{id:'t407',date:'2025-12-19',merchant:'Shell Select Al Bandar',amount:1.053,cat:'fuel',month:'2025-12'},
+{id:'t408',date:'2025-12-21',merchant:'Blade Barber Azai',amount:7.750,cat:'personal',month:'2025-12'},
+{id:'t409',date:'2025-12-21',merchant:'Yasser Ali Fadhil (Wallet)',amount:6.500,cat:'transfers',month:'2025-12'},
+{id:'t410',date:'2025-12-24',merchant:'The Sushi Shack',amount:44.550,cat:'food',month:'2025-12'},
+{id:'t411',date:'2025-12-25',merchant:'G2A.COM',amount:4.810,cat:'gaming',month:'2025-12'},
+{id:'t412',date:'2025-12-25',merchant:'Slider Station',amount:18.370,cat:'food',month:'2025-12'},
+{id:'t413',date:'2025-12-25',merchant:'Seven Brothers Trad',amount:33.600,cat:'food',month:'2025-12'},
+{id:'t414',date:'2025-12-27',merchant:'Shell Oman - North Azaiba',amount:13.600,cat:'fuel',month:'2025-12'},
+{id:'t415',date:'2025-12-27',merchant:'Adil Al Balushi Trad',amount:3.100,cat:'food',month:'2025-12'},
+{id:'t416',date:'2025-12-28',merchant:'Adil Al Balushi Trad',amount:3.100,cat:'food',month:'2025-12'},
+{id:'t417',date:'2025-12-29',merchant:'Ahlain Ghala Exp',amount:0.400,cat:'food',month:'2025-12'},
+{id:'t418',date:'2025-12-29',merchant:'Oman Oil Ghala Express',amount:12.507,cat:'fuel',month:'2025-12'},
+{id:'t419',date:'2025-12-24',merchant:'Talabat',amount:10.300,cat:'food',month:'2025-12'},
+{id:'t420',date:'2025-12-31',merchant:'Al Maha - 111',amount:4.000,cat:'fuel',month:'2025-12'},
+// JAN 2026
+{id:'t421',date:'2026-01-01',merchant:'Starbucks Corniche',amount:4.355,cat:'food',month:'2026-01'},
+{id:'t422',date:'2026-01-02',merchant:'Bait Al Makarm LLC',amount:4.148,cat:'food',month:'2026-01'},
+{id:'t423',date:'2026-01-02',merchant:'Oman Oil - Ghoubra Beach',amount:13.300,cat:'fuel',month:'2026-01'},
+{id:'t424',date:'2026-01-02',merchant:'Al Masa Bowling',amount:4.200,cat:'personal',month:'2026-01'},
+{id:'t425',date:'2026-01-02',merchant:'Mohammed Abdu Alhusain (Wallet)',amount:3.000,cat:'transfers',month:'2026-01'},
+{id:'t426',date:'2026-01-02',merchant:'Slider Station',amount:21.460,cat:'food',month:'2026-01'},
+{id:'t427',date:'2026-01-03',merchant:'Mohamed Muneer Al Saleh (Wallet)',amount:3.852,cat:'transfers',month:'2026-01'},
+{id:'t428',date:'2026-01-03',merchant:'Yasin Ali Al Lawati (Wallet)',amount:14.000,cat:'transfers',month:'2026-01'},
+{id:'t429',date:'2026-01-02',merchant:'Talabat',amount:2.140,cat:'food',month:'2026-01'},
+{id:'t430',date:'2026-01-05',merchant:'Oman Oil - Mabellah',amount:7.000,cat:'fuel',month:'2026-01'},
+{id:'t431',date:'2026-01-05',merchant:'Ahlain Mabella Twin',amount:0.725,cat:'food',month:'2026-01'},
+{id:'t432',date:'2026-01-04',merchant:'Talabat',amount:8.120,cat:'food',month:'2026-01'},
+{id:'t433',date:'2026-01-05',merchant:'Al Azaiba Shopping Cent',amount:1.500,cat:'shopping',month:'2026-01'},
+{id:'t434',date:'2026-01-05',merchant:'Talabat',amount:2.540,cat:'food',month:'2026-01'},
+{id:'t435',date:'2026-01-19',merchant:'Easy Travel',amount:11.300,cat:'transport',month:'2026-01'},
+{id:'t436',date:'2026-01-19',merchant:'Ever Baws',amount:4.400,cat:'shopping',month:'2026-01'},
+{id:'t437',date:'2026-01-19',merchant:'PlanetPharmaci OM',amount:2.950,cat:'personal',month:'2026-01'},
+{id:'t438',date:'2026-01-18',merchant:'Talabat',amount:3.630,cat:'food',month:'2026-01'},
+{id:'t439',date:'2026-01-19',merchant:'Foreign Purchase (FS)',amount:1.180,cat:'trips',month:'2026-01'},
+{id:'t440',date:'2026-01-16',merchant:'Apple.com/Bill',amount:3.950,cat:'personal',month:'2026-01'},
+{id:'t441',date:'2026-01-22',merchant:'Al Maha - 141',amount:5.000,cat:'fuel',month:'2026-01'},
+{id:'t442',date:'2026-01-23',merchant:'Oman Oil - Al Mozon',amount:14.401,cat:'fuel',month:'2026-01'},
+{id:'t443',date:'2026-01-23',merchant:'Blade Barber Azai',amount:7.250,cat:'personal',month:'2026-01'},
+{id:'t444',date:'2026-01-23',merchant:'Cioccolat Taliani',amount:5.880,cat:'food',month:'2026-01'},
+{id:'t445',date:'2026-01-22',merchant:'Talabat',amount:6.140,cat:'food',month:'2026-01'},
+{id:'t446',date:'2026-01-24',merchant:'Cioccolat Taliani (x4)',amount:23.940,cat:'food',month:'2026-01'},
+{id:'t447',date:'2026-01-24',merchant:'Ever Baws',amount:1.000,cat:'shopping',month:'2026-01'},
+{id:'t448',date:'2026-01-24',merchant:'The Steak Company',amount:32.235,cat:'food',month:'2026-01'},
+{id:'t449',date:'2026-01-24',merchant:'Talabat',amount:7.300,cat:'food',month:'2026-01'},
+{id:'t450',date:'2026-01-25',merchant:'Foreign Purchase (FS)',amount:19.730,cat:'trips',month:'2026-01'},
+{id:'t451',date:'2026-01-25',merchant:'Foreign Purchase (FS)',amount:14.590,cat:'trips',month:'2026-01'},
+// FEB 2026
+{id:'t452',date:'2026-01-28',merchant:'Foreign Purchase (FS)',amount:15.770,cat:'trips',month:'2026-02'},
+{id:'t453',date:'2026-01-28',merchant:'Voxi UK',amount:8.210,cat:'personal',month:'2026-02'},
+{id:'t454',date:'2026-02-07',merchant:'Deliveroo (London) 🇬🇧',amount:16.960,cat:'trips',month:'2026-02'},
+{id:'t455',date:'2026-02-07',merchant:"Toro's Steakhouse Liverpool 🇬🇧",amount:29.860,cat:'trips',month:'2026-02'},
+{id:'t456',date:'2026-02-08',merchant:'Dipped London 🇬🇧',amount:4.840,cat:'trips',month:'2026-02'},
+{id:'t457',date:'2026-02-08',merchant:"Harry's Bar James Street 🇬🇧",amount:30.250,cat:'trips',month:'2026-02'},
+{id:'t458',date:'2026-02-08',merchant:'Harrods Ltd 🇬🇧',amount:225.920,cat:'trips',month:'2026-02'},
+{id:'t459',date:'2026-02-08',merchant:'Harrods Ltd 🇬🇧',amount:150.610,cat:'trips',month:'2026-02'},
+{id:'t460',date:'2026-02-08',merchant:'Alo Yoga UK 🇬🇧',amount:50.560,cat:'trips',month:'2026-02'},
+{id:'t461',date:'2026-02-08',merchant:'Uber UK 🇬🇧',amount:8.810,cat:'trips',month:'2026-02'},
+{id:'t462',date:'2026-02-08',merchant:'SQ London 🇬🇧',amount:8.070,cat:'trips',month:'2026-02'},
+{id:'t463',date:'2026-02-09',merchant:'Louis Vuitton London Heathrow 🇬🇧',amount:196.330,cat:'trips',month:'2026-02'},
+{id:'t464',date:'2026-02-09',merchant:'Google London 🇬🇧',amount:4.290,cat:'trips',month:'2026-02'},
+{id:'t465',date:'2026-02-09',merchant:'P.F. Changs London 🇬🇧',amount:53.200,cat:'trips',month:'2026-02'},
+{id:'t466',date:'2026-02-09',merchant:'Uber London 🇬🇧',amount:9.100,cat:'trips',month:'2026-02'},
+{id:'t467',date:'2026-02-09',merchant:'Harrods Heathrow T4 🇬🇧',amount:8.610,cat:'trips',month:'2026-02'},
+{id:'t468',date:'2026-02-09',merchant:'Oxford Street Crepes 🇬🇧',amount:4.310,cat:'trips',month:'2026-02'},
+{id:'t469',date:'2026-02-09',merchant:'Zettle London 🇬🇧',amount:1.080,cat:'trips',month:'2026-02'},
+{id:'t470',date:'2026-02-09',merchant:'TFL Travel London 🇬🇧',amount:5.030,cat:'trips',month:'2026-02'},
+{id:'t471',date:'2026-02-12',merchant:'Oman Oil - Mawleh',amount:8.500,cat:'fuel',month:'2026-02'},
+{id:'t472',date:'2026-02-12',merchant:'Mohammed Mahfoodh Alnabhani (Wallet)',amount:6.500,cat:'transfers',month:'2026-02'},
+{id:'t473',date:'2026-02-12',merchant:'Mohammed Mubarak Al Amry (Wallet)',amount:50.000,cat:'transfers',month:'2026-02'},
+{id:'t474',date:'2026-02-13',merchant:'Shell Select Al Bandar',amount:1.303,cat:'fuel',month:'2026-02'},
+{id:'t475',date:'2026-02-13',merchant:'Adil Al Balushi Trad',amount:4.600,cat:'food',month:'2026-02'},
+{id:'t476',date:'2026-02-11',merchant:'Talabat',amount:7.300,cat:'food',month:'2026-02'},
+{id:'t477',date:'2026-02-13',merchant:'Cafe Amazon',amount:1.488,cat:'food',month:'2026-02'},
+{id:'t478',date:'2026-02-13',merchant:'Oman Oil - Halban',amount:5.300,cat:'fuel',month:'2026-02'},
+{id:'t479',date:'2026-02-13',merchant:'OmanOil Liwa Express',amount:6.300,cat:'fuel',month:'2026-02'},
+{id:'t480',date:'2026-02-13',merchant:'Sand Dance Alquoz (Dubai) 🇦🇪',amount:282.150,cat:'trips',month:'2026-02'},
+{id:'t481',date:'2026-02-13',merchant:'Parkonic Parking (Dubai) 🇦🇪',amount:10.508,cat:'trips',month:'2026-02'},
+{id:'t482',date:'2026-02-12',merchant:'Steam Games',amount:1.370,cat:'gaming',month:'2026-02'},
+{id:'t483',date:'2026-02-12',merchant:'Talabat',amount:4.810,cat:'food',month:'2026-02'},
+{id:'t484',date:'2026-02-15',merchant:'Middle East College (Fees)',amount:1589.840,cat:'personal',month:'2026-02'},
+{id:'t485',date:'2026-02-15',merchant:'Blade Barber Azai',amount:7.250,cat:'personal',month:'2026-02'},
+{id:'t486',date:'2026-02-13',merchant:'Five Guys (Dubai) 🇦🇪',amount:4.190,cat:'trips',month:'2026-02'},
+{id:'t487',date:'2026-02-16',merchant:'Govt of Sharjah 🇦🇪',amount:6.450,cat:'trips',month:'2026-02'},
+{id:'t488',date:'2026-02-13',merchant:'Raising Canes Alshaya (Dubai) 🇦🇪',amount:15.150,cat:'trips',month:'2026-02'},
+{id:'t489',date:'2026-02-14',merchant:'ENOC (Dubai) 🇦🇪',amount:10.390,cat:'trips',month:'2026-02'},
+{id:'t490',date:'2026-02-16',merchant:'Oman Oil - Airport',amount:13.000,cat:'fuel',month:'2026-02'},
+{id:'t491',date:'2026-02-18',merchant:'Mohammed Nasser Al Mawali (Wallet)',amount:200.000,cat:'transfers',month:'2026-02'},
+{id:'t492',date:'2026-02-18',merchant:'Mohammed Mubarak Al Amry (Wallet)',amount:30.000,cat:'transfers',month:'2026-02'},
+{id:'t493',date:'2026-02-18',merchant:'The Land Smokehouse',amount:56.280,cat:'food',month:'2026-02'},
+{id:'t494',date:'2026-02-18',merchant:'Serve Al Q',amount:3.300,cat:'food',month:'2026-02'},
+{id:'t495',date:'2026-02-20',merchant:'Mudhabi Bin Amer',amount:11.395,cat:'paddle',month:'2026-02'},
+{id:'t496',date:'2026-02-20',merchant:'Ace MUSC',amount:17.075,cat:'paddle',month:'2026-02'},
+{id:'t497',date:'2026-02-18',merchant:'AliExpress',amount:1.080,cat:'shopping',month:'2026-02'},
+{id:'t498',date:'2026-02-20',merchant:'Oman Oil - Ghoubra Beach',amount:13.600,cat:'fuel',month:'2026-02'},
+{id:'t499',date:'2026-02-18',merchant:'AliExpress',amount:9.390,cat:'shopping',month:'2026-02'},
+{id:'t500',date:'2026-02-21',merchant:'Ace MUSC',amount:8.000,cat:'paddle',month:'2026-02'},
+{id:'t501',date:'2026-02-22',merchant:'Shahab Rasheed (Wallet)',amount:3.000,cat:'transfers',month:'2026-02'},
+{id:'t502',date:'2026-02-23',merchant:'Jollibee',amount:9.050,cat:'food',month:'2026-02'},
+{id:'t503',date:'2026-02-21',merchant:'Foreign Purchase (FS)',amount:2.370,cat:'trips',month:'2026-02'},
+{id:'t504',date:'2026-02-23',merchant:'Ace MUSC',amount:4.575,cat:'paddle',month:'2026-02'},
+{id:'t505',date:'2026-02-23',merchant:'Al Hail Health Centre',amount:1.200,cat:'personal',month:'2026-02'},
+{id:'t506',date:'2026-02-23',merchant:'Ace MUSC',amount:6.675,cat:'paddle',month:'2026-02'},
+{id:'t507',date:'2026-02-23',merchant:'New Silk Route Restaurant',amount:4.400,cat:'food',month:'2026-02'},
+{id:'t508',date:'2026-02-22',merchant:'AliExpress',amount:266.460,cat:'shopping',month:'2026-02'},
+{id:'t509',date:'2026-02-25',merchant:"McDonald's",amount:6.180,cat:'food',month:'2026-02'},
+{id:'t510',date:'2026-02-24',merchant:'AliExpress.com',amount:18.750,cat:'shopping',month:'2026-02'},
+{id:'t511',date:'2026-02-25',merchant:'Ace MUSC',amount:5.600,cat:'paddle',month:'2026-02'},
+{id:'t512',date:'2026-02-26',merchant:'Oman Oil - Ghoubra Beach',amount:11.400,cat:'fuel',month:'2026-02'},
+// MAR 2026
+{id:'t513',date:'2026-02-27',merchant:'Take Biryani MUSC',amount:2.300,cat:'food',month:'2026-03'},
+{id:'t514',date:'2026-02-27',merchant:'Jollibee',amount:7.350,cat:'food',month:'2026-03'},
+{id:'t515',date:'2026-02-25',merchant:'Foreign Purchase (FS)',amount:3.950,cat:'trips',month:'2026-03'},
+{id:'t516',date:'2026-02-28',merchant:'Cioccolat Taliani',amount:3.675,cat:'food',month:'2026-03'},
+{id:'t517',date:'2026-02-27',merchant:'Voxi UK',amount:8.040,cat:'personal',month:'2026-03'},
+{id:'t518',date:'2026-02-27',merchant:'Talabat',amount:2.650,cat:'food',month:'2026-03'},
+{id:'t519',date:'2026-02-27',merchant:'Voxi UK',amount:7.570,cat:'personal',month:'2026-03'},
+{id:'t520',date:'2026-03-02',merchant:'Oman Oil - Ghoubra Beach',amount:5.000,cat:'fuel',month:'2026-03'},
+{id:'t521',date:'2026-03-01',merchant:'Foreign Purchase (FS)',amount:1.970,cat:'trips',month:'2026-03'},
+{id:'t522',date:'2026-03-04',merchant:'Ace MUSC',amount:4.375,cat:'paddle',month:'2026-03'},
+{id:'t523',date:'2026-03-05',merchant:'Oman Oil - Ghoubra Beach',amount:13.500,cat:'fuel',month:'2026-03'},
+{id:'t524',date:'2026-03-07',merchant:'Cioccolat Taliani',amount:2.688,cat:'food',month:'2026-03'},
+{id:'t525',date:'2026-03-07',merchant:'Sanaa M Gul (Wallet)',amount:8.000,cat:'transfers',month:'2026-03'},
+{id:'t526',date:'2026-03-06',merchant:'Seen Jeem Oman',amount:9.540,cat:'personal',month:'2026-03'},
+{id:'t527',date:'2026-03-09',merchant:'Blade Barber Azai',amount:7.250,cat:'personal',month:'2026-03'},
+{id:'t528',date:'2026-03-09',merchant:'Google YouTube Premium',amount:4.230,cat:'personal',month:'2026-03'},
+{id:'t529',date:'2026-03-17',merchant:'Talabat',amount:3.580,cat:'food',month:'2026-03'},
+{id:'t530',date:'2026-03-19',merchant:'Blade Barber Azai',amount:10.250,cat:'personal',month:'2026-03'},
+];
+
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+let currentMonth = '2026-03';
+let currentView = 'monthly';
+let activeFilter = 'all';
+let monthTabStart = 0; // which month index to start showing in tabs
+
+// ════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════
+function fmt(n) { return 'OMR ' + n.toFixed(3); }
+function fmtShort(n) { return n.toFixed(3); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function getMonthLabel(m) {
+  const [y,mo] = m.split('-');
+  return MONTH_NAMES[mo] + ' ' + y.slice(2);
 }
 
-function showLogin(){
-  document.getElementById('hdr-right').innerHTML='<a class="login-btn" href="/api/auth">&#x1F510; Connect Gmail</a>';
-  document.getElementById('main').innerHTML=
-    '<div class="login-screen">'+
-    '<div style="font-size:48px">&#x1F4B3;</div>'+
-    '<h2>Ali\'s Tracker</h2>'+
-    '<p>Connect your Gmail account to automatically read and categorize your Bank Muscat transactions.</p>'+
-    '<a class="login-big-btn" href="/api/auth">&#x1F510; Connect Gmail to get started</a>'+
-    '<p style="font-size:11px;color:var(--mu);margin-top:8px">Read-only access &middot; Your data stays private</p>'+
-    '</div>';
+function getTxs(month) {
+  if (month === 'all') return TXS;
+  return TXS.filter(t => t.month === month);
 }
 
-function showDashboard(){
-  var d=new Date(lastSynced);
-  var syncStr=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('hdr-right').innerHTML=
-    '<div class="sdot"></div>'+
-    '<span class="status-txt" id="status-txt">'+syncStr+'</span>'+
-    '<button class="sync-btn" id="sync-btn" onclick="doSync()">'+
-    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>'+
-    'Sync Gmail</button>'+
-    '<button class="add-btn" onclick="openAdd()">+ Add</button>'+
-    '<a href="/api/logout" style="font-size:11px;color:var(--mu);font-family:DM Mono,monospace;text-decoration:none">logout</a>';
-
-  document.getElementById('main').innerHTML=
-    '<div class="total-bar">'+
-      '<div class="total-left"><h2 id="gtotal">OMR 0.000 <span>spent</span></h2><p id="drange">21 Mar 2026 &rarr; today</p></div>'+
-      '<div class="sbar" id="sbar"></div>'+
-    '</div>'+
-    '<div class="sum-grid">'+
-      '<div class="cc" data-c="paddle"   onclick="filt(\'paddle\')"  ><div class="cc-icon">🏓</div><div class="cc-name">Paddle</div>  <div class="cc-amt" id="a-paddle">OMR 0.000</div><div class="cc-cnt" id="n-paddle">0 txns</div></div>'+
-      '<div class="cc" data-c="fuel"     onclick="filt(\'fuel\')"    ><div class="cc-icon">⛽</div><div class="cc-name">Fuel</div>    <div class="cc-amt" id="a-fuel">OMR 0.000</div><div class="cc-cnt" id="n-fuel">0 txns</div></div>'+
-      '<div class="cc" data-c="food"     onclick="filt(\'food\')"    ><div class="cc-icon">🍔</div><div class="cc-name">Food</div>    <div class="cc-amt" id="a-food">OMR 0.000</div><div class="cc-cnt" id="n-food">0 txns</div></div>'+
-      '<div class="cc" data-c="transfer" onclick="filt(\'transfer\')" ><div class="cc-icon">💸</div><div class="cc-name">Transfers</div><div class="cc-amt" id="a-transfer">OMR 0.000</div><div class="cc-cnt" id="n-transfer">0 txns</div></div>'+
-      '<div class="cc" data-c="shopping" onclick="filt(\'shopping\')" ><div class="cc-icon">🛍️</div><div class="cc-name">Shopping</div><div class="cc-amt" id="a-shopping">OMR 0.000</div><div class="cc-cnt" id="n-shopping">0 txns</div></div>'+
-      '<div class="cc" data-c="personal" onclick="filt(\'personal\')" ><div class="cc-icon">✦</div><div class="cc-name">Personal</div><div class="cc-amt" id="a-personal">OMR 0.000</div><div class="cc-cnt" id="n-personal">0 txns</div></div>'+
-    '</div>'+
-    '<div class="frow">'+
-      '<button class="fc on" data-f="all"      onclick="filt(\'all\',this)">All</button>'+
-      '<button class="fc"    data-f="paddle"   onclick="filt(\'paddle\',this)">Paddle</button>'+
-      '<button class="fc"    data-f="fuel"     onclick="filt(\'fuel\',this)">Fuel</button>'+
-      '<button class="fc"    data-f="food"     onclick="filt(\'food\',this)">Food</button>'+
-      '<button class="fc"    data-f="transfer" onclick="filt(\'transfer\',this)">Transfers</button>'+
-      '<button class="fc"    data-f="shopping" onclick="filt(\'shopping\',this)">Shopping</button>'+
-      '<button class="fc"    data-f="personal" onclick="filt(\'personal\',this)">Personal</button>'+
-      '<button class="fc"    data-f="ask"      onclick="filt(\'ask\',this)">Needs Review</button>'+
-    '</div>'+
-    '<div class="sec-hd"><h3>Transactions</h3><div class="sec-cnt" id="txcnt"></div></div>'+
-    '<div id="txwrap"></div>';
-
-  renderAll();
+function calcStats(txs) {
+  const bycat = {};
+  Object.keys(CATS).forEach(c => bycat[c] = 0);
+  let total = 0;
+  txs.forEach(t => {
+    bycat[t.cat] = (bycat[t.cat] || 0) + t.amount;
+    if (t.cat !== 'transfers') total += t.amount;
+  });
+  return { bycat, total };
 }
 
-async function doSync(){
-  var btn=document.getElementById('sync-btn');
-  if(btn){btn.disabled=true;btn.classList.add('spinning');}
-  document.getElementById('status-txt').textContent='Syncing...';
-  try{
-    var r=await fetch('/api/sync');
-    if(r.status===401){showLogin();return;}
-    var data=await r.json();
-    var ov=getSaved();
-    var gmailTxs=data.transactions.map(function(t){return Object.assign({},t,{category:ov[t.id]||t.category,manual:false})});
-    var manual=getManual();
-    txs=gmailTxs.concat(manual);
-    txs.sort(function(a,b){return new Date(b.date)-new Date(a.date)});
-    lastSynced=data.synced;
-    renderAll();
-    var d=new Date(data.synced);
-    var syncStr=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    document.getElementById('status-txt').textContent=syncStr;
-    toast('Synced — '+data.count+' transactions');
-  }catch(e){
-    toast('Sync failed: '+e.message);
-    document.getElementById('status-txt').textContent='Sync failed';
+// ════════════════════════════════════════════════════════
+// RENDER MONTH TABS
+// ════════════════════════════════════════════════════════
+function renderMonthTabs() {
+  const sel = document.getElementById('month-select');
+  if (!sel) return;
+  sel.innerHTML = MONTHS.map(m =>
+    `<option value="${m}"${m===currentMonth?' selected':''}>${getMonthLabel(m)}</option>`
+  ).join('');
+}
+
+function selectMonth(m) {
+  currentMonth = m;
+  currentView = 'monthly';
+  activeFilter = 'all';
+  const vs = document.getElementById('view-select');
+  if (vs) vs.value = 'monthly';
+  renderMonthTabs();
+  renderDashboard();
+}
+
+function shiftMonth(dir) {
+  const idx = MONTHS.indexOf(currentMonth);
+  const newIdx = Math.max(0, Math.min(MONTHS.length - 1, idx + dir));
+  if (newIdx !== idx) {
+    currentMonth = MONTHS[newIdx];
+    activeFilter = 'all';
+    renderMonthTabs();
+    renderDashboard();
   }
-  if(btn){btn.disabled=false;btn.classList.remove('spinning');}
 }
 
-function renderAll(){
-  var tot={paddle:0,fuel:0,food:0,transfer:0,shopping:0,personal:0,ask:0};
-  var cnt={paddle:0,fuel:0,food:0,transfer:0,shopping:0,personal:0,ask:0};
-  var grand=0;
-  for(var i=0;i<txs.length;i++){
-    var t=txs[i],c=t.category||'ask';
-    tot[c]+=t.amount;cnt[c]++;
-    if(c!=='transfer')grand+=t.amount;
-  }
-  var cats=['paddle','fuel','food','transfer','shopping','personal'];
-  for(var j=0;j<cats.length;j++){
-    var c=cats[j];
-    var ae=document.getElementById('a-'+c),ne=document.getElementById('n-'+c);
-    if(ae)ae.textContent='OMR '+tot[c].toFixed(3);
-    if(ne)ne.textContent=cnt[c]+' txn'+(cnt[c]!==1?'s':'');
-  }
-  var ge=document.getElementById('gtotal');
-  if(ge)ge.innerHTML='OMR '+grand.toFixed(3)+' <span>spent</span>';
-  var bo=['food','shopping','fuel','paddle','personal','ask'],bt=0;
-  for(var k=0;k<bo.length;k++)bt+=tot[bo[k]];if(!bt)bt=1;
-  var sb=document.getElementById('sbar');
-  if(sb){var bars='';for(var k=0;k<bo.length;k++)bars+='<div class="bseg" style="width:'+(tot[bo[k]]/bt*100)+'%;background:'+CATS[bo[k]].c+';opacity:.85"></div>';sb.innerHTML=bars;}
-  renderList();
+function setView(v) {
+  currentView = v;
+  activeFilter = 'all';
+  const vs = document.getElementById('view-select');
+  if (vs) vs.value = v;
+  renderDashboard();
 }
 
-function renderList(){
-  var fl=[];
-  for(var i=0;i<txs.length;i++){if(activeF==='all'||(txs[i].category||'ask')===activeF)fl.push(txs[i]);}
-  var tc=document.getElementById('txcnt');
-  if(tc)tc.textContent=fl.length+' transaction'+(fl.length!==1?'s':'');
-  var wrap=document.getElementById('txwrap');if(!wrap)return;
-  if(!fl.length){wrap.innerHTML='<div class="empty"><div class="empty-icon">&#x1F50D;</div>No transactions here.</div>';return;}
-  var h='<div class="txl">';
-  for(var i=0;i<fl.length;i++){
-    var tx=fl[i],c=CATS[tx.category]||CATS.ask,isAsk=(tx.category==='ask');
-    h+='<div class="txr'+(isAsk?' ask-row':'')+(tx.manual?' manual-row':'')+'">';
-    h+='<div class="dot" style="background:'+c.c+'"></div>';
-    h+='<div class="txi"><div class="txm">'+esc(tx.merchant)+'</div>';
-    if(isAsk)h+='<button class="ask-btn" data-id="'+tx.id+'" onclick="openMById(this.dataset.id)">? Tap to categorize</button>';
-    else h+='<div class="txd">'+esc(tx.date)+'</div>';
-    h+='</div>';
-    h+='<div class="badge" style="background:'+c.c+'20;color:'+c.c+'">'+c.l+'</div>';
-    if(tx.manual)h+='<div class="manual-badge">manual</div>';
-    h+='<div class="txa">OMR '+tx.amount.toFixed(3)+'</div>';
-    if(!isAsk)h+='<div class="txdt">'+esc(tx.date)+'</div>';
-    h+='<button class="ebtn" data-id="'+tx.id+'" onclick="openMById(this.dataset.id)">edit</button>';
-    if(tx.manual)h+='<button class="delbtn" data-id="'+tx.id+'" onclick="deleteManual(this.dataset.id)">del</button>';
-    h+='</div>';
-  }
-  h+='</div>';wrap.innerHTML=h;
-}
+// ════════════════════════════════════════════════════════
+// MAIN RENDER
+// ════════════════════════════════════════════════════════
+function renderDashboard() {
+  const isAll = currentView === 'yearly';
+  const txs = getTxs(isAll ? 'all' : currentMonth);
+  const { bycat, total } = calcStats(txs);
+  const salary = SALARY;
+  const transfers = bycat.transfers || 0;
+  const net = salary - total;
+  const tripTotal = bycat.trips || 0;
+  const tripName = TRIP_NAMES[currentMonth];
 
-function filt(f,el){
-  activeF=f;
-  document.querySelectorAll('.fc').forEach(function(b){b.classList.toggle('on',b.dataset.f===f)});
-  document.querySelectorAll('.cc').forEach(function(c){c.classList.toggle('active',c.dataset.c===f)});
-  renderList();
-}
+  // Check if month has a trip
+  const hasTripBanner = !isAll && tripName && tripTotal > 0;
 
-function openMById(id){for(var i=0;i<txs.length;i++){if(txs[i].id===id){openM(txs[i]);return;}}}
-function openM(tx){
-  _mid=tx.id;_msel=tx.category;
-  document.getElementById('mname').textContent=tx.merchant;
-  document.getElementById('minfo').textContent='OMR '+tx.amount.toFixed(3)+'  \xb7  '+tx.date;
-  var keys=['paddle','fuel','food','transfer','shopping','personal'],g='';
-  for(var i=0;i<keys.length;i++){
-    var k=keys[i],v=CATS[k];
-    g+='<button class="mbtn'+(tx.category===k?' sel':'')+'" data-cat="'+k+'" onclick="selC(this.dataset.cat)">';
-    g+='<div class="mbtn-icon">'+v.i+'</div><div><div class="mbtn-name">'+v.l+'</div><div class="mbtn-desc">'+v.d+'</div></div></button>';
+  let html = '';
+
+  // TRIP BANNER
+  if (hasTripBanner) {
+    html += `
+    <div class="trip-banner">
+      <div class="trip-banner-icon">✈️</div>
+      <div class="trip-banner-text">
+        <div class="trip-banner-title">${tripName}</div>
+        <div class="trip-banner-sub">${txs.filter(t=>t.cat==='trips').length} transactions abroad</div>
+      </div>
+      <div class="trip-banner-amt">${fmt(tripTotal)}</div>
+    </div>`;
   }
-  document.getElementById('mgrid').innerHTML=g;
-  document.getElementById('modal').style.display='block';
-}
-function selC(c){_msel=c;document.querySelectorAll('.mbtn').forEach(function(b){b.classList.toggle('sel',b.dataset.cat===c)});}
-function saveM(){
-  if(!_msel||!_mid){closeM();return;}
-  for(var i=0;i<txs.length;i++){
-    if(txs[i].id===_mid){
-      txs[i].category=_msel;
-      if(txs[i].manual){
-        var manual=getManual();
-        for(var j=0;j<manual.length;j++){if(manual[j].id===_mid){manual[j].category=_msel;break;}}
-        setManual(manual);
-      } else {
-        var ov=getSaved();ov[_mid]=_msel;setSaved(ov);
-      }
-      break;
+
+  // STATS
+  const netColor = net >= 0 ? 'badge-green' : 'badge-red';
+  const netSign = net >= 0 ? '+' : '';
+  html += `
+  <div class="stats-row">
+    <div class="stat-card spending">
+      <div class="stat-label">Total Spending</div>
+      <div class="stat-amount"><span class="currency">OMR</span>${fmtShort(total)}</div>
+      <div class="stat-sub">${txs.filter(t=>t.cat!=='transfers').length} transactions</div>
+    </div>
+    <div class="stat-card salary">
+      <div class="stat-label">Salary</div>
+      <div class="stat-amount" style="color:var(--salary)"><span class="currency">OMR</span>${isAll ? (SALARY*15).toFixed(3) : fmtShort(salary)}</div>
+      <div class="stat-sub">Taghreed Al Lawati · 99829595</div>
+    </div>
+    <div class="stat-card net">
+      <div class="stat-label">Net Flow</div>
+      <div class="stat-amount" style="color:${net>=0?'var(--salary)':'var(--food)'}"><span class="currency">OMR</span>${fmtShort(Math.abs(net))}</div>
+      <div><span class="stat-badge ${netColor}">${netSign}${fmtShort(net)}</span></div>
+    </div>
+    <div class="stat-card transfers-card">
+      <div class="stat-label">Transfers Sent</div>
+      <div class="stat-amount" style="color:var(--tx2)"><span class="currency">OMR</span>${fmtShort(transfers)}</div>
+      <div class="stat-sub">${txs.filter(t=>t.cat==='transfers').length} transfers</div>
+    </div>
+  </div>`;
+
+  // CHARTS
+  const catEntries = Object.entries(CATS).filter(([k]) => k !== 'transfers');
+  const chartTotal = catEntries.reduce((s,[k]) => s+(bycat[k]||0), 0) || 1;
+
+  // Donut segments
+  let cumulative = 0;
+  const circumference = 2 * Math.PI * 70;
+  const segments = catEntries
+    .map(([k,v]) => ({ k, v, amt: bycat[k]||0 }))
+    .filter(x => x.amt > 0)
+    .sort((a,b) => b.amt-a.amt);
+
+  let donutSegs = '';
+  let startAngle = -90;
+  for (const seg of segments) {
+    const pct = seg.amt / chartTotal;
+    const angle = pct * 360;
+    const dasharray = pct * circumference;
+    const offset = circumference * (1 - (startAngle + 90) / 360);
+    donutSegs += `<circle cx="80" cy="80" r="70" fill="none" stroke="${seg.v.c}" stroke-width="18"
+      stroke-dasharray="${dasharray} ${circumference - dasharray}"
+      stroke-dashoffset="${-cumulative * circumference}"
+      style="transform:rotate(-90deg);transform-origin:80px 80px;cursor:pointer;"
+      onclick="filterCat('${seg.k}')"
+      title="${seg.v.l}: ${fmt(seg.amt)}"/>`;
+    cumulative += pct;
+    startAngle += angle;
+  }
+
+  // Daily spending bars for bar chart
+  let barHtml = '';
+  if (!isAll) {
+    const [y, mo] = currentMonth.split('-');
+    const daysInMonth = new Date(parseInt(y), parseInt(mo), 0).getDate();
+    const dailyData = {};
+    txs.forEach(t => {
+      if (t.cat === 'transfers') return;
+      const d = parseInt(t.date.split('-')[2]);
+      dailyData[d] = (dailyData[d] || 0) + t.amount;
+    });
+    const maxDay = Math.max(...Object.values(dailyData), 1);
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const amt = dailyData[d] || 0;
+      const h = Math.max((amt / maxDay) * 130, amt > 0 ? 4 : 0);
+      const color = amt > 100 ? 'var(--food)' : amt > 50 ? 'var(--trips)' : 'var(--paddle)';
+      barHtml += `
+      <div class="bar-col">
+        <div class="bar-fill" style="height:${h}px;background:${color};opacity:${amt?0.8:0.1};" title="Day ${d}: ${fmt(amt)}"></div>
+        ${d % 5 === 0 || d === 1 ? `<span class="bar-label">${d}</span>` : ''}
+        <div class="bar-tooltip">${d} ${MONTH_NAMES[mo]}: ${fmt(amt)}</div>
+      </div>`;
     }
+  } else {
+    // Monthly bars for all-time view
+    const monthlyData = {};
+    MONTHS.forEach(m => monthlyData[m] = 0);
+    TXS.forEach(t => {
+      if (t.cat === 'transfers') return;
+      monthlyData[t.month] = (monthlyData[t.month] || 0) + t.amount;
+    });
+    const maxM = Math.max(...Object.values(monthlyData), 1);
+    MONTHS.forEach(m => {
+      const amt = monthlyData[m];
+      const h = Math.max((amt / maxM) * 130, amt > 0 ? 4 : 0);
+      const [y,mo] = m.split('-');
+      const color = amt > 500 ? 'var(--food)' : amt > 200 ? 'var(--trips)' : 'var(--paddle)';
+      barHtml += `
+      <div class="bar-col">
+        <div class="bar-fill" style="height:${h}px;background:${color};opacity:0.8;cursor:pointer;" onclick="selectMonth('${m}')"></div>
+        <span class="bar-label">${MONTH_NAMES[mo]}</span>
+        <div class="bar-tooltip">${getMonthLabel(m)}: ${fmt(amt)}</div>
+      </div>`;
+    });
   }
-  renderAll();toast('Saved as '+CATS[_msel].l);closeM();
-}
-function closeM(){document.getElementById('modal').style.display='none';_mid=null;_msel=null;}
 
-function openAdd(){
-  _addCat=null;
-  document.getElementById('add-merchant').value='';
-  document.getElementById('add-amount').value='';
-  document.getElementById('add-date').value=new Date().toISOString().slice(0,10);
-  document.querySelectorAll('.cat-sel-btn').forEach(function(b){b.classList.remove('sel')});
-  document.getElementById('add-modal').style.display='block';
-}
-function selAddCat(c){
-  _addCat=c;
-  document.querySelectorAll('.cat-sel-btn').forEach(function(b){b.classList.toggle('sel',b.dataset.c===c)});
-}
-function submitAdd(){
-  var merchant=document.getElementById('add-merchant').value.trim();
-  var amount=parseFloat(document.getElementById('add-amount').value);
-  var date=document.getElementById('add-date').value;
-  if(!merchant){toast('Please enter a merchant name');return;}
-  if(!amount||amount<=0){toast('Please enter a valid amount');return;}
-  if(!_addCat){toast('Please select a category');return;}
-  var dateStr=date?new Date(date).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-  var tx={id:'manual_'+Date.now(),merchant:merchant,amount:amount,category:_addCat,date:dateStr,ts:date?new Date(date).getTime():Date.now(),manual:true};
-  var manual=getManual();manual.push(tx);setManual(manual);
-  txs.push(tx);txs.sort(function(a,b){return new Date(b.date)-new Date(a.date)});
-  renderAll();
-  toast('Added: '+merchant+' — OMR '+amount.toFixed(3));
-  closeAdd();
-}
-function closeAdd(){document.getElementById('add-modal').style.display='none';_addCat=null;}
-function deleteManual(id){
-  txs=txs.filter(function(t){return t.id!==id});
-  var manual=getManual().filter(function(t){return t.id!==id});
-  setManual(manual);renderAll();toast('Transaction deleted');
+  html += `
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">By Category</div>
+      <div class="donut-wrap">
+        <div class="donut-svg-wrap">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="18"/>
+            ${donutSegs}
+          </svg>
+          <div class="donut-center">
+            <div class="donut-center-amt">${fmtShort(total)}</div>
+            <div class="donut-center-label">OMR</div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          ${segments.slice(0,7).map(seg => {
+            const pct = chartTotal > 0 ? (seg.amt/chartTotal*100) : 0;
+            return `<div class="legend-item" onclick="filterCat('${seg.k}')">
+              <div class="legend-dot" style="background:${seg.v.c}"></div>
+              <span class="legend-name">${seg.v.i} ${seg.v.l}</span>
+              <span class="legend-amt">${fmtShort(seg.amt)}</span>
+              <span class="legend-pct">${pct.toFixed(0)}%</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">${isAll ? 'Monthly Spending' : 'Daily Spending'}</div>
+      <div class="bar-chart-wrap">${barHtml}</div>
+    </div>
+  </div>`;
+
+  // CATEGORY CARDS (exclude transfers)
+  const catOrder = ['food','fuel','paddle','gaming','shopping','trips','personal','transport','transfers'];
+  html += '<div class="cat-grid">';
+  catOrder.forEach(k => {
+    const v = CATS[k];
+    const amt = bycat[k] || 0;
+    const cnt = txs.filter(t=>t.cat===k).length;
+    html += `
+    <div class="cat-card${activeFilter===k?' active':''}" data-cat="${k}" onclick="filterCat('${k}')">
+      <div class="cat-bar" style="background:${v.c}"></div>
+      <div class="cat-icon">${v.i}</div>
+      <div class="cat-name">${v.l}</div>
+      <div class="cat-amount" style="color:${v.c}">${fmtShort(amt)}</div>
+      <div class="cat-count">${cnt} txn${cnt!==1?'s':''}</div>
+    </div>`;
+  });
+  html += '</div>';
+
+  // TRANSACTIONS
+  const filtered = txs.filter(t => activeFilter === 'all' || t.cat === activeFilter);
+  const sorted = [...filtered].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  const chips = ['all','food','fuel','paddle','gaming','shopping','trips','personal','transport','transfers'];
+  html += `
+  <div class="tx-section">
+    <div class="tx-header">
+      <div class="tx-header-left">
+        <span class="tx-title">Transactions</span>
+        <span class="tx-count">${sorted.length} shown</span>
+      </div>
+      <div class="filter-chips">
+        ${chips.map(f => {
+          const label = f==='all' ? 'All' : CATS[f]?.l || f;
+          return `<button class="chip${activeFilter===f?' on':''}" data-f="${f}" onclick="filterTx('${f}')">${label}</button>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="tx-list">`;
+
+  if (sorted.length === 0) {
+    html += `<div class="no-tx">No transactions in this category.</div>`;
+  } else {
+    sorted.forEach(tx => {
+      const cv = CATS[tx.cat] || { c:'#888', l:'Other' };
+      const [,mo,day] = tx.date.split('-');
+      const dateStr = `${day} ${MONTH_NAMES[mo]}`;
+      html += `
+      <div class="tx-row">
+        <div class="tx-cat-dot" style="background:${cv.c}"></div>
+        <div class="tx-info">
+          <div class="tx-merchant">${esc(tx.merchant)}</div>
+          <div class="tx-meta">${tx.date}</div>
+        </div>
+        <div class="tx-badge" style="background:${cv.c}18;color:${cv.c}">${cv.l}</div>
+        <div class="tx-amount" style="color:${cv.c}">OMR ${fmtShort(tx.amount)}</div>
+        <div class="tx-date">${dateStr}</div>
+      </div>`;
+    });
+  }
+
+  html += '</div></div>';
+
+  document.getElementById('main').innerHTML = html;
 }
 
-function toast(m){var e=document.getElementById('toast');e.textContent=m;e.style.display='block';clearTimeout(window._tt);window._tt=setTimeout(function(){e.style.display='none';},2800);}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function filterCat(cat) {
+  activeFilter = activeFilter === cat ? 'all' : cat;
+  renderDashboard();
+}
+function filterTx(f) {
+  activeFilter = f;
+  renderDashboard();
+}
 
-init();
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+// INIT
+renderMonthTabs();
+renderDashboard();
 </script>
 </body>
 </html>
