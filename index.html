@@ -432,7 +432,7 @@ main {
 /* ─── CATEGORY CARDS ─────────────────────────────────── */
 .cat-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 10px;
   margin-bottom: 20px;
 }
@@ -534,6 +534,7 @@ main {
 .chip[data-f=trips].on { background: var(--trips); color: #080a0f; }
 .chip[data-f=transport].on { background: var(--transport); }
 .chip[data-f=transfers].on { background: var(--tx2); }
+.chip[data-f=education].on { background: #e17055; color: #fff; }
 
 .tx-list { display: flex; flex-direction: column; }
 .tx-row {
@@ -616,6 +617,134 @@ main {
 .trip-banner-sub { font-size: 11px; color: var(--tx3); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
 .trip-banner-amt { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--trips); }
 
+
+/* ─── MODAL ──────────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  padding: 28px;
+  width: 420px;
+  max-width: 95vw;
+}
+.modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 22px;
+  letter-spacing: -0.3px;
+}
+.modal-field { margin-bottom: 14px; }
+.modal-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 6px;
+  display: block;
+}
+.modal-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  color: var(--tx);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.modal-input:focus { border-color: var(--paddle); }
+.modal-input option { background: var(--bg3); }
+.modal-row { display: flex; gap: 10px; }
+.modal-row .modal-field { flex: 1; }
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 22px;
+  justify-content: flex-end;
+}
+.btn-cancel {
+  padding: 8px 18px;
+  border-radius: 7px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--tx2);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-save {
+  padding: 8px 20px;
+  border-radius: 7px;
+  border: none;
+  background: var(--paddle);
+  color: #080a0f;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-save:hover { filter: brightness(1.1); }
+
+/* ─── HEADER ACTIONS ─────────────────────────────────── */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.btn-add {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: none;
+  background: var(--paddle);
+  color: #080a0f;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+}
+.btn-add:hover { filter: brightness(1.1); }
+.btn-sync {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--tx2);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.btn-sync:hover { color: var(--tx); border-color: rgba(255,255,255,0.2); }
+.btn-sync.syncing { color: var(--paddle); border-color: var(--paddle); opacity: 0.7; pointer-events: none; }
+.sync-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--salary);
+}
+.sync-dot.error { background: var(--food); }
+.sync-dot.syncing { background: var(--trips); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 /* ─── RESPONSIVE ─────────────────────────────────────── */
 @media (max-width: 900px) {
   .stats-row { grid-template-columns: 1fr 1fr; }
@@ -660,7 +789,10 @@ main {
     </div>
   </div>
 
-  <div class="header-right"></div>
+  <div class="header-actions">
+    <button class="btn-sync" id="sync-btn" onclick="syncGmail()" title="Sync new Bank Muscat transactions from Gmail"><span class="sync-dot" id="sync-dot"></span> Sync Gmail</button>
+    <button class="btn-add" onclick="openModal()">+ Add Transaction</button>
+  </div>
 </header>
 
 <main id="main">
@@ -681,6 +813,7 @@ const CATS = {
   trips:     { l:'Trips',     i:'✈️', c:'#ffeaa7' },
   transport: { l:'Transport', i:'🚗', c:'#55efc4' },
   transfers: { l:'Transfers', i:'💸', c:'#636e72' },
+  education: { l:'Education', i:'🎓', c:'#e17055' },
 };
 
 const MONTHS = [
@@ -1206,7 +1339,7 @@ const TXS = [
 {id:'t481',date:'2026-02-13',merchant:'Parkonic Parking (Dubai) 🇦🇪',amount:10.508,cat:'trips',month:'2026-02'},
 {id:'t482',date:'2026-02-12',merchant:'Steam Games',amount:1.370,cat:'gaming',month:'2026-02'},
 {id:'t483',date:'2026-02-12',merchant:'Talabat',amount:4.810,cat:'food',month:'2026-02'},
-{id:'t484',date:'2026-02-15',merchant:'Middle East College (Fees)',amount:1589.840,cat:'personal',month:'2026-02'},
+{id:'t484',date:'2026-02-15',merchant:'Middle East College (Fees)',amount:1589.840,cat:'education',month:'2026-02'},
 {id:'t485',date:'2026-02-15',merchant:'Blade Barber Azai',amount:7.250,cat:'personal',month:'2026-02'},
 {id:'t486',date:'2026-02-13',merchant:'Five Guys (Dubai) 🇦🇪',amount:4.190,cat:'trips',month:'2026-02'},
 {id:'t487',date:'2026-02-16',merchant:'Govt of Sharjah 🇦🇪',amount:6.450,cat:'trips',month:'2026-02'},
@@ -1262,7 +1395,24 @@ const TXS = [
 let currentMonth = '2026-03';
 let currentView = 'monthly';
 let activeFilter = 'all';
-let monthTabStart = 0; // which month index to start showing in tabs
+
+// Dynamic transactions: Gmail-synced + manually added (stored in localStorage)
+let DYNAMIC_TXS = [];
+
+function loadDynamic() {
+  try {
+    const saved = localStorage.getItem('ali_txs_v2');
+    if (saved) DYNAMIC_TXS = JSON.parse(saved);
+  } catch(e) { DYNAMIC_TXS = []; }
+}
+
+function saveDynamic() {
+  localStorage.setItem('ali_txs_v2', JSON.stringify(DYNAMIC_TXS));
+}
+
+function allTxs() {
+  return [...TXS, ...DYNAMIC_TXS];
+}
 
 // ════════════════════════════════════════════════════════
 // HELPERS
@@ -1277,8 +1427,17 @@ function getMonthLabel(m) {
 }
 
 function getTxs(month) {
-  if (month === 'all') return TXS;
-  return TXS.filter(t => t.month === month);
+  const all = allTxs();
+  if (month === 'all') return all;
+  return all.filter(t => t.month === month);
+}
+
+// Ensure a month exists in MONTHS array
+function ensureMonth(m) {
+  if (!MONTHS.includes(m)) {
+    MONTHS.push(m);
+    MONTHS.sort();
+  }
 }
 
 function calcStats(txs) {
@@ -1501,7 +1660,7 @@ function renderDashboard() {
   </div>`;
 
   // CATEGORY CARDS (exclude transfers)
-  const catOrder = ['food','fuel','paddle','gaming','shopping','trips','personal','transport','transfers'];
+  const catOrder = ['food','fuel','paddle','gaming','shopping','trips','personal','transport','education','transfers'];
   html += '<div class="cat-grid">';
   catOrder.forEach(k => {
     const v = CATS[k];
@@ -1522,7 +1681,7 @@ function renderDashboard() {
   const filtered = txs.filter(t => activeFilter === 'all' || t.cat === activeFilter);
   const sorted = [...filtered].sort((a,b) => new Date(b.date) - new Date(a.date));
 
-  const chips = ['all','food','fuel','paddle','gaming','shopping','trips','personal','transport','transfers'];
+  const chips = ['all','food','fuel','paddle','gaming','shopping','trips','personal','transport','education','transfers'];
   html += `
   <div class="tx-section">
     <div class="tx-header">
@@ -1581,5 +1740,45 @@ function filterTx(f) {
 renderMonthTabs();
 renderDashboard();
 </script>
+
+<!-- ─── ADD TRANSACTION MODAL ─── -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title">+ Add Transaction</div>
+    <div class="modal-field">
+      <label class="modal-label">Merchant / Description</label>
+      <input class="modal-input" id="m-merchant" type="text" placeholder="e.g. Ace MUSC, Talabat..."/>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field">
+        <label class="modal-label">Amount (OMR)</label>
+        <input class="modal-input" id="m-amount" type="number" step="0.001" min="0" placeholder="0.000"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Date</label>
+        <input class="modal-input" id="m-date" type="date"/>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Category</label>
+      <select class="modal-input" id="m-cat">
+        <option value="food">🍔 Food</option>
+        <option value="fuel">⛽ Fuel</option>
+        <option value="paddle">🏓 Paddle</option>
+        <option value="gaming">🎮 Gaming</option>
+        <option value="personal">✦ Personal</option>
+        <option value="shopping">🛍️ Shopping</option>
+        <option value="trips">✈️ Trips</option>
+        <option value="transport">🚗 Transport</option>
+        <option value="transfers">💸 Transfers</option>
+        <option value="education">🎓 Education</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveTransaction()">Save Transaction</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
