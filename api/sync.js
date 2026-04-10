@@ -1,109 +1,123 @@
 import { google } from 'googleapis';
-import { getClient } from './auth.js';
 
-function parseCookies(req) {
-  const list = {};
-  const rc = req.headers.cookie;
-  if (rc) rc.split(';').forEach(c => {
-    const parts = c.split('=');
-    list[parts[0].trim()] = decodeURIComponent(parts.slice(1).join('=').trim());
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  if (!cookieHeader) return cookies;
+  cookieHeader.split(';').forEach(cookie => {
+    const [name, ...rest] = cookie.trim().split('=');
+    cookies[name.trim()] = decodeURIComponent(rest.join('='));
   });
-  return list;
+  return cookies;
 }
 
-function categorize(s) {
-  s = s.toLowerCase();
-  if (/\bace\b|ace musc|paddle|padel|\bstrike\b|mudhabi/.test(s)) return 'paddle';
-  if (/oman oil|\bshell\b|al maha|maha fuel|station:/.test(s)) return 'fuel';
-  if (/you have sent omr .+ to /.test(s)) return 'transfer';
-  if (/jollibee|mcdonald|kfc|burger|pizza|talabat|biryani|cioccolat|bateel|tea corner|silk route|abu rateb|nandos|coffee|restaurant|cafe|dining|food|shawarma|sushi|kucu/.test(s)) return 'food';
-  if (/barber|blade|salon|spa|gym|health centre|clinic|hospital|pharmacy|anthropic|youtube|netflix|spotify|google|voxi|subscription|knowledge view/.test(s)) return 'personal';
-  if (/aliexpress|amazon|noon|lulu|carrefour|sultan center|dubizzle|seen jeem/.test(s)) return 'shopping';
-  if (/you have received|transfer ali raid|easy deposit|atm cash|cdm|inward payment|vat/.test(s)) return null;
-  return 'ask';
-}
+const MONTH_MAP = {
+  JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',
+  JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'
+};
 
-function parseEmail(msg) {
-  const s = msg.snippet || '';
-  const ts = parseInt(msg.internalDate);
-  const date = new Date(ts);
-  const dateStr = date.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+function parseBMEmail(body, emailDate) {
+  const descMatch = body.match(/Description\s*:\s*([^\n<\r]+)/i);
+  const amtMatch = body.match(/Amount\s*:\s*OMR\s*([\d.]+)/i);
+  const dtMatch = body.match(/Date\/Time\s*:\s*(\d{2})\s+([A-Z]{3})\s+(\d{4})/i);
 
-  if (/you have sent omr .+ to ali raid/i.test(s)) return null;
-  if (date <= new Date('2026-03-20')) return null;
+  if (!amtMatch) return null;
 
-  const sentM = s.match(/You have sent OMR ([\d,.]+) to ([A-Z][A-Z '\-]+?) (?:from your|using)/i);
-  if (sentM) {
-    return {
-      id: msg.messageId,
-      merchant: 'Sent → ' + sentM[2].trim(),
-      amount: parseFloat(sentM[1]),
-      category: 'transfer',
-      date: dateStr,
-      ts
-    };
+  const amount = parseFloat(amtMatch[1]);
+  const rawDesc = descMatch ? descMatch[1].trim() : 'Bank Muscat';
+  const merchant = rawDesc.replace(/^\d+-/, '').replace(/\s+\+\d+.*$/, '').trim();
+
+  let date;
+  if (dtMatch) {
+    const day = dtMatch[1];
+    const mo = MONTH_MAP[dtMatch[2].toUpperCase()] || '01';
+    const yr = dtMatch[3];
+    date = `${yr}-${mo}-${day}`;
+  } else {
+    date = new Date(parseInt(emailDate)).toISOString().slice(0, 10);
   }
 
-  const descM = s.match(/Description\s*:\s*[\d]+-(.+?)(?:\s+Amount|\s*$)/i);
-  const amtM  = s.match(/Amount\s*:\s*OMR\s*([\d,.]+)/i);
-  if (descM && amtM) {
-    const merchant = descM[1].trim().replace(/\s+(Amount|Date|POS\d+).*$/i, '');
-    const cat = categorize(s);
-    if (!cat) return null;
-    return {
-      id: msg.messageId,
-      merchant,
-      amount: parseFloat(amtM[1]),
-      category: cat,
-      date: dateStr,
-      ts
-    };
-  }
+  const month = date.slice(0, 7);
 
-  return null;
+  const m = merchant.toLowerCase();
+  let cat = 'personal';
+  if (/talabat|mcdonald|kfc|burger|pizza|coffee|cafe|shawarma|sushi|biryani|food|rest|grill|kitchen|bakery|juice|cream|cinnabon|slider|seven brother|chick buck|land burger|steak|jollibee|hardee|swift shawarma/i.test(m)) cat = 'food';
+  else if (/oman oil|shell|al maha|fuel|petrol|gas|enoc|emarat/i.test(m)) cat = 'fuel';
+  else if (/ace musc|mudhabi|padel|paddle|strike/i.test(m)) cat = 'paddle';
+  else if (/steam|riot|gaming planet|likecard|dokan|remal|g2a|ea games|tap.*gaming|damadah/i.test(m)) cat = 'gaming';
+  else if (/amazon|aliexpress|alibaba|noon|sultan center|carrefour|borders|aramex|dhl/i.test(m)) cat = 'shopping';
+  else if (/hotel|flight|uber|tfl|karwa|airbnb|harrods|louis vuitton|deliveroo|heathrow/i.test(m)) cat = 'trips';
+  else if (/rop traffic|etraffic|parking|nissan service|grand tire/i.test(m)) cat = 'transport';
+  else if (/middle east college|college|university|school|tuition/i.test(m)) cat = 'education';
+  else if (/transfer|wallet/i.test(m)) cat = 'transfers';
+
+  if (/ALI RAID|easy deposit|cdm deposit|inward payment|reversal/i.test(merchant)) return null;
+
+  return { date, merchant, amount, cat, month };
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Content-Type', 'application/json');
-  const cookies = parseCookies(req);
-  const tokenStr = cookies.gTokens;
-  if (!tokenStr) return res.status(401).json({ error: 'not_authenticated' });
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  const cookies = parseCookies(req.headers.cookie);
+  let tokens;
+  try {
+    tokens = JSON.parse(cookies.gauth || '{}');
+  } catch {
+    return res.status(401).json({ error: 'Not authenticated', transactions: [] });
+  }
+
+  if (!tokens.access_token) {
+    return res.status(401).json({ error: 'Not authenticated', transactions: [] });
+  }
+
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET
+  );
+  oauth2Client.setCredentials(tokens);
+
+  const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
   try {
-    const tokens = JSON.parse(tokenStr);
-    const oauth2Client = getClient(req);
-    oauth2Client.setCredentials(tokens);
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-
     const searchRes = await gmail.users.messages.list({
       userId: 'me',
-      q: 'from:NOREPLY@bankmuscat.com subject:"Account Transaction"',
-      maxResults: 100
+      q: 'from:NOREPLY@bankmuscat.com subject:"Account Transaction" after:2026/03/19',
+      maxResults: 100,
     });
 
     const messages = searchRes.data.messages || [];
     const transactions = [];
 
-    for (const m of messages) {
-      const detail = await gmail.users.messages.get({
+    for (const msg of messages) {
+      const full = await gmail.users.messages.get({
         userId: 'me',
-        id: m.id,
-        format: 'metadata',
-        metadataHeaders: ['Date']
+        id: msg.id,
+        format: 'full',
       });
-      const tx = parseEmail({
-        messageId: m.id,
-        snippet: detail.data.snippet,
-        internalDate: detail.data.internalDate
-      });
-      if (tx && tx.amount > 0) transactions.push(tx);
+
+      const payload = full.data.payload;
+      let body = '';
+
+      if (payload.body?.data) {
+        body = Buffer.from(payload.body.data, 'base64').toString('utf-8');
+      } else if (payload.parts) {
+        for (const part of payload.parts) {
+          if (part.mimeType === 'text/html' || part.mimeType === 'text/plain') {
+            if (part.body?.data) {
+              body = Buffer.from(part.body.data, 'base64').toString('utf-8');
+              break;
+            }
+          }
+        }
+      }
+
+      const tx = parseBMEmail(body, full.data.internalDate);
+      if (tx) transactions.push(tx);
     }
 
-    transactions.sort((a, b) => b.ts - a.ts);
-    res.json({ transactions, count: transactions.length, synced: new Date().toISOString() });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(200).json({ transactions, count: transactions.length });
+  } catch (error) {
+    console.error('Gmail sync error:', error);
+    res.status(500).json({ error: error.message, transactions: [] });
   }
 }
