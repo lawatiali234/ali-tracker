@@ -1,25 +1,5 @@
 import { google } from 'googleapis';
 
-async function kvGet(key) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-  const res = await fetch(`${url}/get/${key}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  const data = await res.json();
-  return data.result ? JSON.parse(data.result) : null;
-}
-
-async function kvSet(key, value) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-  await fetch(`${url}/set/${key}`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ value: JSON.stringify(value) })
-  });
-}
-
 const MONTH_MAP = {
   JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',
   JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'
@@ -61,31 +41,18 @@ function parseBMEmail(body, emailDate) {
 
 export default async function handler(req, httpRes) {
   httpRes.setHeader('Access-Control-Allow-Origin', '*');
+  httpRes.setHeader('Access-Control-Allow-Headers', 'Authorization');
 
-  // Get token from Upstash — no cookie needed
-  let tokens;
-  try {
-    tokens = await kvGet('ali_gmail_token');
-  } catch(e) {
-    return httpRes.status(500).json({ error: 'KV error: ' + e.message, transactions: [] });
-  }
+  // Get access token from Authorization header sent by browser
+  const authHeader = req.headers.authorization || '';
+  const accessToken = authHeader.replace('Bearer ', '').trim();
 
-  if (!tokens || !tokens.access_token) {
+  if (!accessToken) {
     return httpRes.status(401).json({ error: 'Not authenticated', transactions: [] });
   }
 
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET
-  );
-  oauth2Client.setCredentials(tokens);
-
-  // Auto-refresh token if expired and save back
-  oauth2Client.on('tokens', async (newTokens) => {
-    const updated = { ...tokens, ...newTokens };
-    await kvSet('ali_gmail_token', updated);
-  });
-
+  const oauth2Client = new google.auth.OAuth2();
+  oauth2Client.setCredentials({ access_token: accessToken });
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
   try {
