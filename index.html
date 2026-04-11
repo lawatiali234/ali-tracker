@@ -1844,7 +1844,9 @@ function updateSyncTime() {
 }
 
 async function saveDynamic() {
-  // Save to Upstash — syncs across all devices
+  // Always save to localStorage first (immediate, reliable)
+  localStorage.setItem('ali_txs_v2', JSON.stringify(DYNAMIC_TXS));
+  // Also save to Upstash for cross-device sync
   try {
     await fetch('/api/transactions-save', {
       method: 'POST',
@@ -1852,8 +1854,7 @@ async function saveDynamic() {
       body: JSON.stringify({ transactions: DYNAMIC_TXS })
     });
   } catch(e) {
-    // Fallback to localStorage
-    localStorage.setItem('ali_txs_v2', JSON.stringify(DYNAMIC_TXS));
+    // Upstash failed but localStorage already saved
   }
 }
 
@@ -2633,16 +2634,24 @@ async function syncGmail() {
 }
 
 // ════════════════════════════════════════════════════════
-// INIT — render immediately with hardcoded data
+// INIT — load from localStorage immediately, then render
 DYNAMIC_TXS = [];
 try { loadOverrides(); } catch(e) { TX_OVERRIDES = {}; }
 try { updateSyncTime(); } catch(e) {}
+// Load from localStorage (fast, works offline and locally)
+try {
+  const saved = localStorage.getItem('ali_txs_v2');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed)) DYNAMIC_TXS = parsed;
+  }
+} catch(e) {}
 try { renderMonthTabs(); } catch(e) {}
 try {
   renderDashboard();
 } catch(e) {
   document.getElementById('main').innerHTML =
-    '<div style="padding:40px;color:#ff6b81;font-family:monospace">Render error: ' + e.message + '<br>' + e.stack + '</div>';
+    '<div style="padding:40px;color:#ff6b81;font-family:monospace">Render error: ' + e.message + '</div>';
 }
 
 // Load Upstash transactions in background (only on Vercel, not local)
