@@ -37,21 +37,19 @@ function parseBMEmail(body, emailDate) {
   }
 
   const month = date.slice(0, 7);
-
-  // Auto-categorize
   const m = merchant.toLowerCase();
   let cat = 'personal';
   if (/talabat|mcdonald|kfc|burger|pizza|coffee|cafe|shawarma|sushi|biryani|food|rest|grill|kitchen|bakery|juice|cream|cinnabon|slider|seven brother|chick buck|land burger|steak|jollibee|hardee|swift shawarma/i.test(m)) cat = 'food';
   else if (/oman oil|shell|al maha|fuel|petrol|gas|enoc|emarat/i.test(m)) cat = 'fuel';
   else if (/ace musc|mudhabi|padel|paddle|strike/i.test(m)) cat = 'paddle';
-  else if (/steam|riot|gaming planet|likecard|dokan|remal|g2a|ea games|tap.*gaming|damadah/i.test(m)) cat = 'gaming';
+  else if (/steam|riot|gaming planet|likecard|dokan|remal|g2a|ea games|tap.*gaming|damadah|supercell/i.test(m)) cat = 'gaming';
   else if (/amazon|aliexpress|alibaba|noon|sultan center|carrefour|borders|aramex|dhl/i.test(m)) cat = 'shopping';
   else if (/hotel|flight|uber|tfl|karwa|airbnb|harrods|louis vuitton|deliveroo|heathrow/i.test(m)) cat = 'trips';
   else if (/rop traffic|etraffic|parking|nissan service|grand tire/i.test(m)) cat = 'transport';
   else if (/middle east college|college|university|school|tuition/i.test(m)) cat = 'education';
+  else if (/vox cinema|seen jeem|magic planet|ground control/i.test(m)) cat = 'entertainment';
   else if (/transfer|wallet/i.test(m)) cat = 'transfers';
 
-  // Skip self-transfers and deposits
   if (/ALI RAID|easy deposit|cdm deposit|inward payment|reversal/i.test(merchant)) return null;
 
   return { date, merchant, amount, cat, month };
@@ -60,12 +58,14 @@ function parseBMEmail(body, emailDate) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
+  // Read cookie
   const cookies = parseCookies(req.headers.cookie);
   let tokens;
   try {
-    tokens = JSON.parse(cookies.gTokens || '{}');
-  } catch {
-    return res.status(401).json({ error: 'Not authenticated', transactions: [] });
+    const raw = cookies.gTokens || cookies.gauth || '{}';
+    tokens = JSON.parse(raw);
+  } catch(e) {
+    return res.status(401).json({ error: 'Cookie parse failed', transactions: [] });
   }
 
   if (!tokens.access_token) {
@@ -81,10 +81,9 @@ export default async function handler(req, res) {
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
   try {
-    // Fetch Bank Muscat transaction emails after the hardcoded data cutoff (Mar 19 2026)
     const searchRes = await gmail.users.messages.list({
       userId: 'me',
-      q: 'from:NOREPLY@bankmuscat.com subject:"Account Transaction" after:2026/03/19',
+      q: 'from:NOREPLY@bankmuscat.com subject:"Account Transaction" after:2026/04/11',
       maxResults: 100,
     });
 
@@ -92,36 +91,37 @@ export default async function handler(req, res) {
     const transactions = [];
 
     for (const msg of messages) {
-      const full = await gmail.users.messages.get({
-        userId: 'me',
-        id: msg.id,
-        format: 'full',
-      });
+      try {
+        const full = await gmail.users.messages.get({
+          userId: 'me',
+          id: msg.id,
+          format: 'full',
+        });
 
-      const payload = full.data.payload;
-      let body = '';
+        const payload = full.data.payload;
+        let body = '';
 
-      // Extract body text
-      if (payload.body?.data) {
-        body = Buffer.from(payload.body.data, 'base64').toString('utf-8');
-      } else if (payload.parts) {
-        for (const part of payload.parts) {
-          if (part.mimeType === 'text/html' || part.mimeType === 'text/plain') {
-            if (part.body?.data) {
+        if (payload.body?.data) {
+          body = Buffer.from(payload.body.data, 'base64').toString('utf-8');
+        } else if (payload.parts) {
+          for (const part of payload.parts) {
+            if ((part.mimeType === 'text/html' || part.mimeType === 'text/plain') && part.body?.data) {
               body = Buffer.from(part.body.data, 'base64').toString('utf-8');
               break;
             }
           }
         }
-      }
 
-      const tx = parseBMEmail(body, full.data.internalDate);
-      if (tx) transactions.push(tx);
+        const tx = parseBMEmail(body, full.data.internalDate);
+        if (tx) transactions.push(tx);
+      } catch(msgErr) {
+        // skip individual message errors
+      }
     }
 
     res.status(200).json({ transactions, count: transactions.length });
   } catch (error) {
-    console.error('Gmail sync error:', error);
+    console.error('Sync error:', error.message);
     res.status(500).json({ error: error.message, transactions: [] });
   }
 }
