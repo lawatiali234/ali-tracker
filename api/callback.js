@@ -1,5 +1,15 @@
 import { getClient } from './auth.js';
 
+async function kvSet(key, value) {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  await fetch(`${url}/set/${key}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ value: JSON.stringify(value) })
+  });
+}
+
 export default async function handler(req, res) {
   const { code, error } = req.query;
   if (error || !code) return res.redirect('/?error=access_denied');
@@ -7,7 +17,8 @@ export default async function handler(req, res) {
   const oauth2Client = getClient(req);
   const { tokens } = await oauth2Client.getToken(code);
 
-  const cookieValue = encodeURIComponent(JSON.stringify(tokens));
-  res.setHeader('Set-Cookie', `gauth=${cookieValue}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${60*60*24*30}`);
-  res.redirect('/');
+  // Save token to Upstash — no cookie needed
+  await kvSet('ali_gmail_token', tokens);
+
+  res.redirect('/?synced=1');
 }
