@@ -1824,30 +1824,7 @@ let activeFilter = 'all';
 let DYNAMIC_TXS = [];
 
 async function loadDynamic() {
-  loadOverrides();
-  updateSyncTime();
-  DYNAMIC_TXS = [];
-  // Load from Upstash with 3 second timeout
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch('/api/transactions-get', { signal: controller.signal });
-    clearTimeout(timeout);
-    if (res.ok) {
-      const data = await res.json();
-      DYNAMIC_TXS = Array.isArray(data.transactions) ? data.transactions : [];
-      return;
-    }
-  } catch(e) {
-    // Timeout or error — fallback to localStorage
-  }
-  try {
-    const saved = localStorage.getItem('ali_txs_v2');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      DYNAMIC_TXS = Array.isArray(parsed) ? parsed : [];
-    }
-  } catch(e) { DYNAMIC_TXS = []; }
+  // kept for compatibility but init no longer calls this
 }
 
 function updateSyncTime() {
@@ -2656,12 +2633,36 @@ async function syncGmail() {
 }
 
 // ════════════════════════════════════════════════════════
-// INIT
-if (!Array.isArray(DYNAMIC_TXS)) DYNAMIC_TXS = [];
-loadDynamic().then(() => {
-  renderMonthTabs();
+// INIT — render immediately with hardcoded data
+DYNAMIC_TXS = [];
+try { loadOverrides(); } catch(e) { TX_OVERRIDES = {}; }
+try { updateSyncTime(); } catch(e) {}
+try { renderMonthTabs(); } catch(e) {}
+try {
   renderDashboard();
-}).catch(() => { DYNAMIC_TXS = []; renderMonthTabs(); renderDashboard(); });
+} catch(e) {
+  document.getElementById('main').innerHTML =
+    '<div style="padding:40px;color:#ff6b81;font-family:monospace">Render error: ' + e.message + '<br>' + e.stack + '</div>';
+}
+
+// Load Upstash transactions in background (only on Vercel, not local)
+if (location.hostname !== 'localhost' && location.protocol !== 'file:') {
+  (async () => {
+    try {
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 3000);
+      const res = await fetch('/api/transactions-get', { signal: controller.signal });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.transactions) && data.transactions.length > 0) {
+          DYNAMIC_TXS = data.transactions;
+          try { renderMonthTabs(); renderDashboard(); } catch(e) {}
+        }
+      }
+    } catch(e) {}
+  })();
+}
+</script>
 
 <!-- ─── EDIT CATEGORY MODAL ─── -->
 <div class="modal-overlay" id="edit-modal-overlay" onclick="closeEditOutside(event)">
