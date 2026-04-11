@@ -34,6 +34,7 @@
   --gaming-bg: rgba(162,155,254,0.08);
   --personal-bg: rgba(116,185,255,0.08);
   --shopping-bg: rgba(253,121,168,0.08);
+  --entertainment-bg: rgba(253,121,168,0.08);
   --trips-bg: rgba(255,234,167,0.08);
   --transport-bg: rgba(85,239,196,0.08);
   --transfers-bg: rgba(99,110,114,0.08);
@@ -535,6 +536,7 @@ main {
 .chip[data-f=transport].on { background: var(--transport); }
 .chip[data-f=transfers].on { background: var(--tx2); }
 .chip[data-f=education].on { background: #e17055; color: #fff; }
+.chip[data-f=entertainment].on { background: #fd79a8; color: #fff; }
 
 .tx-list { display: flex; flex-direction: column; }
 .tx-row {
@@ -598,6 +600,53 @@ main {
   text-align: center;
   color: var(--tx3);
   font-size: 13px;
+}
+.tx-delete {
+  background: none;
+  border: none;
+  color: var(--tx3);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: all 0.15s;
+}
+.tx-edit {
+  background: none;
+  border: none;
+  color: var(--tx3);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: all 0.15s;
+}
+.tx-row:hover .tx-delete,
+.tx-row:hover .tx-edit { opacity: 0.5; }
+.tx-delete:hover { opacity: 1 !important; color: var(--food); background: rgba(255,107,129,0.12); }
+.tx-edit:hover { opacity: 1 !important; color: var(--paddle); background: rgba(168,255,120,0.1); }
+/* On mobile always show since no hover */
+@media (max-width: 600px) {
+  .tx-delete, .tx-edit { opacity: 0.4; }
+  .tx-date { display: none; }
+  .tx-amount { min-width: 60px; font-size: 12px; }
+  .tx-badge { display: none; }
+  .tx-merchant { font-size: 12px; }
+  .tx-meta { font-size: 10px; }
+  .tx-row { padding: 10px 12px; gap: 8px; }
+}
+/* Edit category modal */
+.edit-modal {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  padding: 24px;
+  width: 340px;
+  max-width: 95vw;
 }
 
 /* ─── TRIP BANNER ────────────────────────────────────── */
@@ -736,6 +785,13 @@ main {
   gap: 5px;
 }
 .btn-sync:hover { color: var(--tx); border-color: rgba(255,255,255,0.2); }
+.sync-time {
+  font-size: 9px;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+  text-align: right;
+  line-height: 1.3;
+}
 .btn-sync.syncing { color: var(--paddle); border-color: var(--paddle); opacity: 0.7; pointer-events: none; }
 .sync-dot {
   width: 6px; height: 6px;
@@ -745,17 +801,300 @@ main {
 .sync-dot.error { background: var(--food); }
 .sync-dot.syncing { background: var(--trips); animation: pulse 1s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+/* ─── SEARCH BAR ─────────────────────────────────────── */
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0;
+  position: relative;
+}
+#search-container {
+  padding-bottom: 0;
+}
+.search-input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--tx);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  padding: 10px 16px 10px 40px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-input:focus { border-color: var(--border2); }
+.search-input::placeholder { color: var(--tx3); }
+.search-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--tx3);
+  font-size: 14px;
+  pointer-events: none;
+}
+.search-clear {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--tx3);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+}
+.search-results-count {
+  font-size: 11px;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─── TRIP BREAKDOWN ──────────────────────────────────── */
+.trips-section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.trips-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+@media (max-width: 900px) { .trips-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .trips-grid { grid-template-columns: 1fr 1fr; } }
+.trip-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.trip-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--trips), rgba(255,234,167,0.2));
+}
+.trip-card:hover { border-color: rgba(255,234,167,0.3); transform: translateY(-2px); }
+.trip-card.active { border-color: rgba(255,234,167,0.4); background: rgba(255,234,167,0.05); }
+.trip-card-flag { font-size: 20px; margin-bottom: 6px; }
+.trip-card-name { font-size: 11px; font-weight: 600; color: var(--tx2); margin-bottom: 8px; }
+.trip-card-dates { font-size: 9px; color: var(--tx3); font-family: 'JetBrains Mono', monospace; margin-bottom: 8px; }
+.trip-card-total { font-size: 18px; font-weight: 700; color: var(--trips); font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; }
+.trip-card-count { font-size: 10px; color: var(--tx3); font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
+
+/* ─── MONEY RECEIVED ─────────────────────────────────── */
+.income-section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.income-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.income-header:hover { background: rgba(255,255,255,0.02); }
+.income-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.income-total {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--salary);
+}
+.income-toggle {
+  font-size: 12px;
+  color: var(--tx3);
+  transition: transform 0.2s;
+}
+.income-toggle.open { transform: rotate(180deg); }
+.income-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.income-row:last-child { border-bottom: none; }
+.income-row:hover { background: rgba(255,255,255,0.02); }
+.income-dot {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  background: var(--salary);
+  flex-shrink: 0;
+}
+.income-info { flex: 1; min-width: 0; }
+.income-from {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.income-note {
+  font-size: 10px;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 2px;
+}
+.income-amount {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--salary);
+  flex-shrink: 0;
+  min-width: 80px;
+  text-align: right;
+}
+.income-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--tx3);
+  flex-shrink: 0;
+  min-width: 55px;
+  text-align: right;
+}
+
+/* ─── MONEY RECEIVED ─────────────────────────────────── */
+.income-section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.income-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.income-header:hover { background: rgba(255,255,255,0.02); }
+.income-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--tx3);
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.income-total {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--salary);
+}
+.income-toggle { font-size: 12px; color: var(--tx3); transition: transform 0.2s; }
+.income-toggle.open { transform: rotate(180deg); }
+.income-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.income-row:last-child { border-bottom: none; }
+.income-row:hover { background: rgba(255,255,255,0.02); }
+.income-dot { width: 10px; height: 10px; border-radius: 3px; background: var(--salary); flex-shrink: 0; }
+.income-info { flex: 1; min-width: 0; }
+.income-from { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.income-note { font-size: 10px; color: var(--tx3); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+.income-amount { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--salary); flex-shrink: 0; min-width: 80px; text-align: right; }
+.income-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--tx3); flex-shrink: 0; min-width: 55px; text-align: right; }
+
+/* ─── TOAST ──────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 13px;
+  color: var(--tx);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  animation: slideUp 0.2s ease;
+}
+.toast-undo {
+  color: var(--paddle);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 12px;
+}
+@keyframes slideUp {
+  from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);   opacity: 1; }
+}
+
 /* ─── RESPONSIVE ─────────────────────────────────────── */
 @media (max-width: 900px) {
   .stats-row { grid-template-columns: 1fr 1fr; }
   .charts-row { grid-template-columns: 1fr; }
   .cat-grid { grid-template-columns: repeat(3, 1fr); }
-  .header-center { display: none; }
+  header {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 16px;
+    gap: 10px;
+  }
+  .header-center {
+    order: 3;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    gap: 10px;
+  }
+  .header-actions { order: 2; }
+  .logo { order: 1; }
+  .dropdown-wrap select { min-width: 0; width: 100%; }
+  .header-center { display: flex; }
 }
 @media (max-width: 600px) {
   main { padding: 16px 16px 60px; }
-  .cat-grid { grid-template-columns: repeat(2, 1fr); }
+  .cat-grid { grid-template-columns: repeat(3, 1fr); }
   .stats-row { grid-template-columns: 1fr 1fr; }
+  .logo-sub { display: none; }
+  .btn-sync { font-size: 10px; padding: 6px 10px; }
 }
 
 /* scrollbar */
@@ -790,10 +1129,24 @@ main {
   </div>
 
   <div class="header-actions">
-    <button class="btn-sync" id="sync-btn" onclick="syncGmail()" title="Sync new Bank Muscat transactions from Gmail"><span class="sync-dot" id="sync-dot"></span> Sync Gmail</button>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+      <button class="btn-sync" id="sync-btn" onclick="syncGmail()" title="Sync new Bank Muscat transactions from Gmail"><span class="sync-dot" id="sync-dot"></span> Sync Gmail</button>
+      <span class="sync-time" id="sync-time"></span>
+    </div>
     <button class="btn-add" onclick="openModal()">+ Add Transaction</button>
   </div>
 </header>
+
+<!-- Permanent search bar outside main render loop -->
+<div id="search-container" style="max-width:1280px;margin:0 auto;padding:16px 28px 0;">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="search-input" type="text"
+      placeholder="Search transactions across all months..."
+      oninput="handleSearch(this.value)" />
+    <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none">✕</button>
+  </div>
+</div>
 
 <main id="main">
   <div style="text-align:center;padding:60px;color:var(--tx3);">Loading...</div>
@@ -814,12 +1167,13 @@ const CATS = {
   transport: { l:'Transport', i:'🚗', c:'#55efc4' },
   transfers: { l:'Transfers', i:'💸', c:'#636e72' },
   education: { l:'Education', i:'🎓', c:'#e17055' },
+  entertainment: { l:'Entertainment', i:'🎬', c:'#fd79a8' },
 };
 
 const MONTHS = [
   '2025-01','2025-02','2025-03','2025-04','2025-05','2025-06',
   '2025-07','2025-08','2025-09','2025-10','2025-11','2025-12',
-  '2026-01','2026-02','2026-03'
+  '2026-01','2026-02','2026-03','2026-04'
 ];
 
 const MONTH_NAMES = {
@@ -835,8 +1189,20 @@ const TRIP_NAMES = {
   '2025-08': '🇬🇧 London Trip',
   '2025-10': '🇶🇦 Qatar Trip',
   '2025-11': '🇦🇪 Dubai Trip',
-  '2026-02': '🇬🇧 London Trip',
+  '2026-02': '🇬🇧 London + 🇦🇪 Dubai',
+  '2026-04': '🇦🇪 Dubai Trip',
 };
+
+// Trip date ranges for breakdown feature
+const TRIPS = [
+  { id:'dubai-apr25',   name:'🇦🇪 Dubai',        start:'2025-04-23', end:'2025-04-25' },
+  { id:'sweden-jul25',  name:'🇸🇪 Sweden',        start:'2025-07-17', end:'2025-07-27' },
+  { id:'london-aug25',  name:'🇬🇧 London',        start:'2025-07-31', end:'2025-08-04' },
+  { id:'qatar-oct25',   name:'🇶🇦 Qatar',         start:'2025-10-09', end:'2025-10-12' },
+  { id:'dubai-nov25',   name:'🇦🇪 Dubai',         start:'2025-11-14', end:'2025-11-16' },
+  { id:'london-feb26',  name:'🇬🇧 London',        start:'2026-02-07', end:'2026-02-09' },
+  { id:'dubai-feb26',   name:'🇦🇪 Dubai',         start:'2026-02-13', end:'2026-02-14' },
+];
 
 // ════════════════════════════════════════════════════════
 // TRANSACTIONS
@@ -1015,7 +1381,7 @@ const TXS = [
 {id:'t166',date:'2025-05-19',merchant:'Oman Oil Marketing Co',amount:6.595,cat:'fuel',month:'2025-05'},
 {id:'t167',date:'2025-05-21',merchant:'Transfer · 766 19240 269 85',amount:17.400,cat:'transfers',month:'2025-05'},
 {id:'t168',date:'2025-05-21',merchant:'Talabat',amount:17.890,cat:'food',month:'2025-05'},
-{id:'t169',date:'2025-05-24',merchant:'VOX Cinemas',amount:0.400,cat:'personal',month:'2025-05'},
+{id:'t169',date:'2025-05-24',merchant:'VOX Cinemas',amount:0.400,cat:'entertainment',month:'2025-05'},
 {id:'t170',date:'2025-05-28',merchant:'Burger King - Al Khuwaij',amount:7.780,cat:'food',month:'2025-05'},
 // JUN 2025
 {id:'t171',date:'2025-05-30',merchant:'Shell Select Azaiba',amount:1.170,cat:'fuel',month:'2025-06'},
@@ -1029,7 +1395,7 @@ const TXS = [
 {id:'t179',date:'2025-06-09',merchant:'Alibaba.com Singapore',amount:239.850,cat:'shopping',month:'2025-06'},
 {id:'t180',date:'2025-06-11',merchant:'Talabat',amount:5.910,cat:'food',month:'2025-06'},
 {id:'t181',date:'2025-06-15',merchant:"McDonald's",amount:5.396,cat:'food',month:'2025-06'},
-{id:'t182',date:'2025-06-15',merchant:'Magic Planet',amount:1.160,cat:'personal',month:'2025-06'},
+{id:'t182',date:'2025-06-15',merchant:'Magic Planet',amount:1.160,cat:'entertainment',month:'2025-06'},
 {id:'t183',date:'2025-06-19',merchant:'Shell Select Al Bandar',amount:0.370,cat:'fuel',month:'2025-06'},
 {id:'t184',date:'2025-06-22',merchant:'Shell Select Al Bandar',amount:1.570,cat:'fuel',month:'2025-06'},
 {id:'t185',date:'2025-06-22',merchant:'SEGPAY.COM',amount:1.180,cat:'personal',month:'2025-06'},
@@ -1135,7 +1501,7 @@ const TXS = [
 {id:'t282',date:'2025-09-14',merchant:"McDonald's",amount:5.080,cat:'food',month:'2025-09'},
 {id:'t283',date:'2025-09-14',merchant:'Talabat',amount:4.030,cat:'food',month:'2025-09'},
 {id:'t284',date:'2025-09-13',merchant:'Remal (Gaming)',amount:5.260,cat:'gaming',month:'2025-09'},
-{id:'t285',date:'2025-09-15',merchant:'Ground Control Mall',amount:7.350,cat:'personal',month:'2025-09'},
+{id:'t285',date:'2025-09-15',merchant:'Ground Control Mall',amount:7.350,cat:'entertainment',month:'2025-09'},
 {id:'t286',date:'2025-09-15',merchant:'Elegant Art LLC',amount:3.045,cat:'shopping',month:'2025-09'},
 {id:'t287',date:'2025-09-15',merchant:'Remal (Gaming)',amount:12.110,cat:'gaming',month:'2025-09'},
 {id:'t288',date:'2025-09-19',merchant:'Tropical Mutt',amount:1.400,cat:'food',month:'2025-09'},
@@ -1218,26 +1584,26 @@ const TXS = [
 {id:'t363',date:'2025-11-23',merchant:'Apple.com/Bill',amount:2.760,cat:'personal',month:'2025-11'},
 {id:'t364',date:'2025-11-24',merchant:'Apple.com/Bill',amount:9.460,cat:'personal',month:'2025-11'},
 {id:'t365',date:'2025-11-26',merchant:'Binaa Development',amount:25.368,cat:'personal',month:'2025-11'},
-{id:'t366',date:'2025-11-24',merchant:'Foreign Purchase (FS)',amount:0.790,cat:'trips',month:'2025-11'},
-{id:'t367',date:'2025-11-24',merchant:'Foreign Purchase (FS)',amount:3.950,cat:'trips',month:'2025-11'},
-{id:'t368',date:'2025-11-25',merchant:'Foreign Purchase (FS)',amount:1.580,cat:'trips',month:'2025-11'},
-{id:'t369',date:'2025-11-25',merchant:'Foreign Purchase (FS)',amount:19.310,cat:'trips',month:'2025-11'},
-{id:'t370',date:'2025-11-25',merchant:'Foreign Purchase (FS)',amount:1.970,cat:'trips',month:'2025-11'},
-{id:'t371',date:'2025-11-26',merchant:'Foreign Purchase (FS)',amount:5.900,cat:'trips',month:'2025-11'},
-{id:'t372',date:'2025-11-26',merchant:'Foreign Purchase (FS)',amount:6.290,cat:'trips',month:'2025-11'},
+{id:'t366',date:'2025-11-24',merchant:'Supercell Store',amount:0.790,cat:'gaming',month:'2025-11'},
+{id:'t367',date:'2025-11-24',merchant:'Supercell Store',amount:3.950,cat:'gaming',month:'2025-11'},
+{id:'t368',date:'2025-11-25',merchant:'Supercell Store',amount:1.580,cat:'gaming',month:'2025-11'},
+{id:'t369',date:'2025-11-25',merchant:'Supercell Store',amount:19.310,cat:'gaming',month:'2025-11'},
+{id:'t370',date:'2025-11-25',merchant:'Supercell Store',amount:1.970,cat:'gaming',month:'2025-11'},
+{id:'t371',date:'2025-11-26',merchant:'Supercell Store',amount:5.900,cat:'gaming',month:'2025-11'},
+{id:'t372',date:'2025-11-26',merchant:'Supercell Store',amount:6.290,cat:'gaming',month:'2025-11'},
 {id:'t373',date:'2025-11-28',merchant:'Land Burger',amount:7.700,cat:'food',month:'2025-11'},
-{id:'t374',date:'2025-11-27',merchant:'Foreign Purchase (FS)',amount:6.300,cat:'trips',month:'2025-11'},
+{id:'t374',date:'2025-11-27',merchant:'Supercell Store',amount:6.300,cat:'gaming',month:'2025-11'},
 {id:'t375',date:'2025-11-27',merchant:'Remal (Gaming)',amount:1.360,cat:'gaming',month:'2025-11'},
 {id:'t376',date:'2025-11-27',merchant:'LikeCard (Gaming)',amount:12.580,cat:'gaming',month:'2025-11'},
 {id:'t377',date:'2025-11-29',merchant:'Oman Oil - Ghoubra Beach',amount:9.200,cat:'fuel',month:'2025-11'},
 {id:'t378',date:'2025-11-29',merchant:'Hassan Iqbal Ali Al Lawati (Wallet)',amount:4.200,cat:'transfers',month:'2025-11'},
 {id:'t379',date:'2025-11-29',merchant:'Al Luban Land MUSC',amount:4.400,cat:'shopping',month:'2025-11'},
 {id:'t380',date:'2025-11-29',merchant:'Baskin Robbins Azai',amount:7.100,cat:'food',month:'2025-11'},
-{id:'t381',date:'2025-11-29',merchant:'Foreign Purchase (FS)',amount:1.770,cat:'trips',month:'2025-11'},
-{id:'t382',date:'2025-11-29',merchant:'Foreign Purchase (FS)',amount:5.900,cat:'trips',month:'2025-11'},
-{id:'t383',date:'2025-11-29',merchant:'Foreign Purchase (FS)',amount:6.290,cat:'trips',month:'2025-11'},
+{id:'t381',date:'2025-11-29',merchant:'Supercell Store',amount:1.770,cat:'gaming',month:'2025-11'},
+{id:'t382',date:'2025-11-29',merchant:'Supercell Store',amount:5.900,cat:'gaming',month:'2025-11'},
+{id:'t383',date:'2025-11-29',merchant:'Supercell Store',amount:6.290,cat:'gaming',month:'2025-11'},
 // DEC 2025
-{id:'t384',date:'2025-11-30',merchant:'Foreign Purchase (FS)',amount:8.650,cat:'trips',month:'2025-12'},
+{id:'t384',date:'2025-11-30',merchant:'Supercell Store',amount:8.650,cat:'gaming',month:'2025-12'},
 {id:'t385',date:'2025-12-01',merchant:'Talabat',amount:2.770,cat:'food',month:'2025-12'},
 {id:'t386',date:'2025-12-04',merchant:'Top Bous',amount:2.475,cat:'food',month:'2025-12'},
 {id:'t387',date:'2025-12-04',merchant:"McDonald's",amount:3.360,cat:'food',month:'2025-12'},
@@ -1293,7 +1659,7 @@ const TXS = [
 {id:'t436',date:'2026-01-19',merchant:'Ever Baws',amount:4.400,cat:'shopping',month:'2026-01'},
 {id:'t437',date:'2026-01-19',merchant:'PlanetPharmaci OM',amount:2.950,cat:'personal',month:'2026-01'},
 {id:'t438',date:'2026-01-18',merchant:'Talabat',amount:3.630,cat:'food',month:'2026-01'},
-{id:'t439',date:'2026-01-19',merchant:'Foreign Purchase (FS)',amount:1.180,cat:'trips',month:'2026-01'},
+{id:'t439',date:'2026-01-19',merchant:'Supercell Store',amount:1.180,cat:'gaming',month:'2026-01'},
 {id:'t440',date:'2026-01-16',merchant:'Apple.com/Bill',amount:3.950,cat:'personal',month:'2026-01'},
 {id:'t441',date:'2026-01-22',merchant:'Al Maha - 141',amount:5.000,cat:'fuel',month:'2026-01'},
 {id:'t442',date:'2026-01-23',merchant:'Oman Oil - Al Mozon',amount:14.401,cat:'fuel',month:'2026-01'},
@@ -1304,10 +1670,10 @@ const TXS = [
 {id:'t447',date:'2026-01-24',merchant:'Ever Baws',amount:1.000,cat:'shopping',month:'2026-01'},
 {id:'t448',date:'2026-01-24',merchant:'The Steak Company',amount:32.235,cat:'food',month:'2026-01'},
 {id:'t449',date:'2026-01-24',merchant:'Talabat',amount:7.300,cat:'food',month:'2026-01'},
-{id:'t450',date:'2026-01-25',merchant:'Foreign Purchase (FS)',amount:19.730,cat:'trips',month:'2026-01'},
-{id:'t451',date:'2026-01-25',merchant:'Foreign Purchase (FS)',amount:14.590,cat:'trips',month:'2026-01'},
+{id:'t450',date:'2026-01-25',merchant:'Supercell Store',amount:19.730,cat:'gaming',month:'2026-01'},
+{id:'t451',date:'2026-01-25',merchant:'Supercell Store',amount:14.590,cat:'gaming',month:'2026-01'},
 // FEB 2026
-{id:'t452',date:'2026-01-28',merchant:'Foreign Purchase (FS)',amount:15.770,cat:'trips',month:'2026-02'},
+{id:'t452',date:'2026-01-28',merchant:'Supercell Store',amount:15.770,cat:'gaming',month:'2026-02'},
 {id:'t453',date:'2026-01-28',merchant:'Voxi UK',amount:8.210,cat:'personal',month:'2026-02'},
 {id:'t454',date:'2026-02-07',merchant:'Deliveroo (London) 🇬🇧',amount:16.960,cat:'trips',month:'2026-02'},
 {id:'t455',date:'2026-02-07',merchant:"Toro's Steakhouse Liverpool 🇬🇧",amount:29.860,cat:'trips',month:'2026-02'},
@@ -1345,6 +1711,8 @@ const TXS = [
 {id:'t487',date:'2026-02-16',merchant:'Govt of Sharjah 🇦🇪',amount:6.450,cat:'trips',month:'2026-02'},
 {id:'t488',date:'2026-02-13',merchant:'Raising Canes Alshaya (Dubai) 🇦🇪',amount:15.150,cat:'trips',month:'2026-02'},
 {id:'t489',date:'2026-02-14',merchant:'ENOC (Dubai) 🇦🇪',amount:10.390,cat:'trips',month:'2026-02'},
+{id:'t489b',date:'2026-02-14',merchant:'Emarat Ajman (Dubai) 🇦🇪',amount:3.237,cat:'trips',month:'2026-02'},
+{id:'t489c',date:'2026-02-14',merchant:'Oman Oil Aqar Twin',amount:6.300,cat:'fuel',month:'2026-02'},
 {id:'t490',date:'2026-02-16',merchant:'Oman Oil - Airport',amount:13.000,cat:'fuel',month:'2026-02'},
 {id:'t491',date:'2026-02-18',merchant:'Mohammed Nasser Al Mawali (Wallet)',amount:200.000,cat:'transfers',month:'2026-02'},
 {id:'t492',date:'2026-02-18',merchant:'Mohammed Mubarak Al Amry (Wallet)',amount:30.000,cat:'transfers',month:'2026-02'},
@@ -1358,7 +1726,7 @@ const TXS = [
 {id:'t500',date:'2026-02-21',merchant:'Ace MUSC',amount:8.000,cat:'paddle',month:'2026-02'},
 {id:'t501',date:'2026-02-22',merchant:'Shahab Rasheed (Wallet)',amount:3.000,cat:'transfers',month:'2026-02'},
 {id:'t502',date:'2026-02-23',merchant:'Jollibee',amount:9.050,cat:'food',month:'2026-02'},
-{id:'t503',date:'2026-02-21',merchant:'Foreign Purchase (FS)',amount:2.370,cat:'trips',month:'2026-02'},
+{id:'t503',date:'2026-02-21',merchant:'Supercell Store',amount:2.370,cat:'gaming',month:'2026-02'},
 {id:'t504',date:'2026-02-23',merchant:'Ace MUSC',amount:4.575,cat:'paddle',month:'2026-02'},
 {id:'t505',date:'2026-02-23',merchant:'Al Hail Health Centre',amount:1.200,cat:'personal',month:'2026-02'},
 {id:'t506',date:'2026-02-23',merchant:'Ace MUSC',amount:6.675,cat:'paddle',month:'2026-02'},
@@ -1368,21 +1736,59 @@ const TXS = [
 {id:'t510',date:'2026-02-24',merchant:'AliExpress.com',amount:18.750,cat:'shopping',month:'2026-02'},
 {id:'t511',date:'2026-02-25',merchant:'Ace MUSC',amount:5.600,cat:'paddle',month:'2026-02'},
 {id:'t512',date:'2026-02-26',merchant:'Oman Oil - Ghoubra Beach',amount:11.400,cat:'fuel',month:'2026-02'},
+// MAR 2026 (additional — from Gmail after Mar 19)
+{id:'t531',date:'2026-03-22',merchant:'Cafe Bateel MUSC',amount:2.508,cat:'food',month:'2026-03'},
+{id:'t531b',date:'2026-03-22',merchant:'MOHASSER (Wallet)',amount:350.000,cat:'transfers',month:'2026-03'},
+{id:'t532',date:'2026-03-23',merchant:'Sultan Center Qurum',amount:1.175,cat:'shopping',month:'2026-03'},
+{id:'t533',date:'2026-03-23',merchant:'Dubizzle.com Dubai',amount:3.284,cat:'shopping',month:'2026-03'},
+{id:'t534',date:'2026-03-24',merchant:'Abu Rateb 18 Nov Street',amount:2.835,cat:'food',month:'2026-03'},
+{id:'t535',date:'2026-03-24',merchant:'Ace MUSC',amount:7.775,cat:'paddle',month:'2026-03'},
+{id:'t535b',date:'2026-03-24',merchant:'Talabat',amount:2.420,cat:'food',month:'2026-03'},
+{id:'t536',date:'2026-03-24',merchant:'ANASMEER (Wallet)',amount:11.000,cat:'transfers',month:'2026-03'},
+{id:'t537',date:'2026-03-24',merchant:'KHALSIDI (Wallet)',amount:35.000,cat:'transfers',month:'2026-03'},
+{id:'t538',date:'2026-03-25',merchant:'Talabat',amount:4.610,cat:'food',month:'2026-03'},
+{id:'t539',date:'2026-03-26',merchant:'Knowledge View LLC',amount:0.200,cat:'personal',month:'2026-03'},
+{id:'t540',date:'2026-03-27',merchant:'Oman Oil - Ghoubra Beach',amount:13.500,cat:'fuel',month:'2026-03'},
+{id:'t540b',date:'2026-03-27',merchant:'Tea Corner Qurum',amount:0.525,cat:'food',month:'2026-03'},
+{id:'t541',date:'2026-03-28',merchant:'Oman Oil - Mawah',amount:0.800,cat:'fuel',month:'2026-03'},
+{id:'t542',date:'2026-03-28',merchant:'Talabat',amount:3.290,cat:'food',month:'2026-03'},
+{id:'t543',date:'2026-03-29',merchant:'MOHASSER (Wallet)',amount:30.000,cat:'transfers',month:'2026-03'},
+{id:'t543b',date:'2026-03-29',merchant:'Talabat',amount:4.310,cat:'food',month:'2026-03'},
+{id:'t543c',date:'2026-03-30',merchant:'ALI RAID (Wallet)',amount:37.000,cat:'transfers',month:'2026-03'},
+{id:'t544',date:'2026-03-31',merchant:'Talabat',amount:3.120,cat:'food',month:'2026-03'},
+// APR 2026 (Gmail synced + from bank app screenshot)
+{id:'t545',date:'2026-04-02',merchant:'Ace MUSC',amount:6.400,cat:'paddle',month:'2026-04'},
+{id:'t545b',date:'2026-04-02',merchant:'MOOSHSIN (Wallet)',amount:80.000,cat:'transfers',month:'2026-04'},
+{id:'t545c',date:'2026-04-04',merchant:'Ace MUSC',amount:6.400,cat:'paddle',month:'2026-04'},
+{id:'t546',date:'2026-04-04',merchant:'KUCU OMAN',amount:0.100,cat:'food',month:'2026-04'},
+{id:'t547',date:'2026-04-04',merchant:'HASSIDER (Wallet)',amount:90.000,cat:'transfers',month:'2026-04'},
+{id:'t548',date:'2026-04-03',merchant:'Blade Barber',amount:5.250,cat:'personal',month:'2026-04'},
+{id:'t549',date:'2026-04-04',merchant:'KFC',amount:5.625,cat:'food',month:'2026-04'},
+{id:'t550',date:'2026-04-05',merchant:'Muscat Sports',amount:8.175,cat:'paddle',month:'2026-04'},
+{id:'t551',date:'2026-04-06',merchant:'Muscat Sports',amount:10.600,cat:'paddle',month:'2026-04'},
+{id:'t552',date:'2026-04-07',merchant:'Creative Thinking Plus',amount:19.000,cat:'paddle',month:'2026-04'},
+{id:'t553',date:'2026-04-08',merchant:'Muscat Sports Service',amount:7.166,cat:'paddle',month:'2026-04'},
+{id:'t554',date:'2026-04-08',merchant:'Talabat',amount:5.340,cat:'food',month:'2026-04'},
+{id:'t555',date:'2026-04-08',merchant:'Shell Oman - Azaiba',amount:5.000,cat:'fuel',month:'2026-04'},
+{id:'t556',date:'2026-04-09',merchant:'Frozen Beanz Qurum',amount:3.045,cat:'food',month:'2026-04'},
+{id:'t557',date:'2026-04-09',merchant:'Carnival Restaurant',amount:5.400,cat:'food',month:'2026-04'},
+{id:'t558',date:'2026-04-09',merchant:'Anthropic',amount:1.980,cat:'personal',month:'2026-04'},
+{id:'t559',date:'2026-04-10',merchant:'VOX Cinemas Muscat City Centre',amount:1.800,cat:'entertainment',month:'2026-04'},
 // MAR 2026
 {id:'t513',date:'2026-02-27',merchant:'Take Biryani MUSC',amount:2.300,cat:'food',month:'2026-03'},
 {id:'t514',date:'2026-02-27',merchant:'Jollibee',amount:7.350,cat:'food',month:'2026-03'},
-{id:'t515',date:'2026-02-25',merchant:'Foreign Purchase (FS)',amount:3.950,cat:'trips',month:'2026-03'},
+{id:'t515',date:'2026-02-25',merchant:'Supercell Store',amount:3.950,cat:'gaming',month:'2026-03'},
 {id:'t516',date:'2026-02-28',merchant:'Cioccolat Taliani',amount:3.675,cat:'food',month:'2026-03'},
 {id:'t517',date:'2026-02-27',merchant:'Voxi UK',amount:8.040,cat:'personal',month:'2026-03'},
 {id:'t518',date:'2026-02-27',merchant:'Talabat',amount:2.650,cat:'food',month:'2026-03'},
 {id:'t519',date:'2026-02-27',merchant:'Voxi UK',amount:7.570,cat:'personal',month:'2026-03'},
 {id:'t520',date:'2026-03-02',merchant:'Oman Oil - Ghoubra Beach',amount:5.000,cat:'fuel',month:'2026-03'},
-{id:'t521',date:'2026-03-01',merchant:'Foreign Purchase (FS)',amount:1.970,cat:'trips',month:'2026-03'},
+{id:'t521',date:'2026-03-01',merchant:'Supercell Store',amount:1.970,cat:'gaming',month:'2026-03'},
 {id:'t522',date:'2026-03-04',merchant:'Ace MUSC',amount:4.375,cat:'paddle',month:'2026-03'},
 {id:'t523',date:'2026-03-05',merchant:'Oman Oil - Ghoubra Beach',amount:13.500,cat:'fuel',month:'2026-03'},
 {id:'t524',date:'2026-03-07',merchant:'Cioccolat Taliani',amount:2.688,cat:'food',month:'2026-03'},
 {id:'t525',date:'2026-03-07',merchant:'Sanaa M Gul (Wallet)',amount:8.000,cat:'transfers',month:'2026-03'},
-{id:'t526',date:'2026-03-06',merchant:'Seen Jeem Oman',amount:9.540,cat:'personal',month:'2026-03'},
+{id:'t526',date:'2026-03-06',merchant:'Seen Jeem Oman',amount:9.540,cat:'entertainment',month:'2026-03'},
 {id:'t527',date:'2026-03-09',merchant:'Blade Barber Azai',amount:7.250,cat:'personal',month:'2026-03'},
 {id:'t528',date:'2026-03-09',merchant:'Google YouTube Premium',amount:4.230,cat:'personal',month:'2026-03'},
 {id:'t529',date:'2026-03-17',merchant:'Talabat',amount:3.580,cat:'food',month:'2026-03'},
@@ -1390,9 +1796,26 @@ const TXS = [
 ];
 
 // ════════════════════════════════════════════════════════
+// INCOME — Money Received (named senders only)
+// ════════════════════════════════════════════════════════
+const INCOME = [
+  {id:'i1', date:'2025-05-06', from:'Taghreed Abdul Fattah Al Lawati', amount:37.000,  month:'2025-05', note:''},
+  {id:'i2', date:'2025-05-15', from:'Taghreed Abdul Fattah Al Lawati', amount:90.000,  month:'2025-05', note:''},
+  {id:'i3', date:'2025-05-18', from:'Taghreed Abdul Fattah Al Lawati', amount:15.000,  month:'2025-05', note:''},
+  {id:'i4', date:'2026-02-25', from:'Mohammed Mahfoodh Said Alnabhani', amount:42.700, month:'2026-02', note:''},
+  {id:'i5', date:'2026-03-06', from:'Hashem Ali Hamed Altaei',          amount:70.000, month:'2026-03', note:''},
+  {id:'i6', date:'2026-03-18', from:'Yasin Ali Abdul Ameer Al Lawati',  amount:150.000,month:'2026-03', note:''},
+  {id:'i7', date:'2026-03-21', from:'Taghreed Abdul Fattah Al Lawati',  amount:150.000,month:'2026-03', note:'Salary'},
+  {id:'i8', date:'2026-04-04', from:'Taghreed Abdul Fattah Al Lawati',  amount:100.000,month:'2026-04', note:''},
+];
+
+// ════════════════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════════════════
-let currentMonth = '2026-03';
+let currentMonth = '2026-04';
+let searchQuery = '';
+let activeTripFilter = null;
+let incomeOpen = true;
 let currentView = 'monthly';
 let activeFilter = 'all';
 
@@ -1404,15 +1827,31 @@ function loadDynamic() {
     const saved = localStorage.getItem('ali_txs_v2');
     if (saved) DYNAMIC_TXS = JSON.parse(saved);
   } catch(e) { DYNAMIC_TXS = []; }
+  loadOverrides();
+  updateSyncTime();
+}
+
+function updateSyncTime() {
+  const el = document.getElementById('sync-time');
+  if (!el) return;
+  const ts = localStorage.getItem('ali_last_sync');
+  if (!ts) { el.textContent = 'Never synced'; return; }
+  const d = new Date(parseInt(ts));
+  const now = new Date();
+  const diffMin = Math.floor((now - d) / 60000);
+  let label;
+  if (diffMin < 1) label = 'Just now';
+  else if (diffMin < 60) label = diffMin + 'm ago';
+  else if (diffMin < 1440) label = Math.floor(diffMin/60) + 'h ago';
+  else label = d.toLocaleDateString('en-GB', {day:'numeric',month:'short'});
+  el.textContent = 'Last sync: ' + label;
 }
 
 function saveDynamic() {
   localStorage.setItem('ali_txs_v2', JSON.stringify(DYNAMIC_TXS));
 }
 
-function allTxs() {
-  return [...TXS, ...DYNAMIC_TXS];
-}
+
 
 // ════════════════════════════════════════════════════════
 // HELPERS
@@ -1496,13 +1935,22 @@ function setView(v) {
 // ════════════════════════════════════════════════════════
 function renderDashboard() {
   const isAll = currentView === 'yearly';
-  const txs = getTxs(isAll ? 'all' : currentMonth);
+
+  // If a trip is active, filter ALL data to just that trip's date range
+  let txs;
+  if (activeTripFilter) {
+    const trip = TRIPS.find(t => t.id === activeTripFilter);
+    txs = trip ? allTxs().filter(t => t.date >= trip.start && t.date <= trip.end) : allTxs();
+  } else {
+    txs = getTxs(isAll ? 'all' : currentMonth);
+  }
+
   const { bycat, total } = calcStats(txs);
-  const salary = SALARY;
+  const salary = activeTripFilter ? 0 : SALARY;
   const transfers = bycat.transfers || 0;
   const net = salary - total;
   const tripTotal = bycat.trips || 0;
-  const tripName = TRIP_NAMES[currentMonth];
+  const tripName = activeTripFilter ? null : TRIP_NAMES[currentMonth];
 
   // Check if month has a trip
   const hasTripBanner = !isAll && tripName && tripTotal > 0;
@@ -1522,32 +1970,102 @@ function renderDashboard() {
     </div>`;
   }
 
+  // Search bar is static HTML above main — just update clear button visibility
+  const clearBtn = document.getElementById('search-clear');
+  if (clearBtn) clearBtn.style.display = searchQuery ? 'block' : 'none';
+
+  // TRIP BREAKDOWN (only in all-time view, not when searching)
+  if (isAll && !searchQuery) {
+    const tripCards = TRIPS.map(trip => {
+      const tripTxs = allTxs().filter(t =>
+        t.date >= trip.start && t.date <= trip.end && t.cat === 'trips'
+      );
+      const tripTotal = tripTxs.reduce((s,t) => s+t.amount, 0);
+      const [,sm,sd] = trip.start.split('-');
+      const [,em,ed] = trip.end.split('-');
+      const dateLabel = `${parseInt(sd)} ${MONTH_NAMES[sm]} – ${parseInt(ed)} ${MONTH_NAMES[em]}`;
+      const flag = trip.name.split(' ')[0];
+      const tripName = trip.name.replace(flag+' ','');
+      return `
+      <div class="trip-card${activeTripFilter===trip.id?' active':''}" onclick="filterByTrip('${trip.id}')">
+        <div class="trip-card-flag">${flag}</div>
+        <div class="trip-card-name">${tripName}</div>
+        <div class="trip-card-dates">${dateLabel}</div>
+        <div class="trip-card-total">${fmtShort(tripTotal)}</div>
+        <div class="trip-card-count">${tripTxs.length} transactions</div>
+      </div>`;
+    }).join('');
+
+    html += `
+    <div class="trips-section">
+      <div class="chart-title">✈️ Trip Breakdown <span style="font-size:10px;color:var(--tx3);margin-left:8px;font-weight:400;">click to filter</span></div>
+      <div class="trips-grid">${tripCards}</div>
+    </div>`;
+  }
+
   // STATS
   const netColor = net >= 0 ? 'badge-green' : 'badge-red';
   const netSign = net >= 0 ? '+' : '';
-  html += `
-  <div class="stats-row">
-    <div class="stat-card spending">
-      <div class="stat-label">Total Spending</div>
-      <div class="stat-amount"><span class="currency">OMR</span>${fmtShort(total)}</div>
-      <div class="stat-sub">${txs.filter(t=>t.cat!=='transfers').length} transactions</div>
+
+  // Trip active — show trip-specific stats
+  if (activeTripFilter) {
+    const trip = TRIPS.find(t => t.id === activeTripFilter);
+    const tripSpend = txs.filter(t=>t.cat!=='transfers').reduce((s,t)=>s+t.amount,0);
+    const tripTxCount = txs.filter(t=>t.cat!=='transfers').length;
+    const topCat = Object.entries(bycat).filter(([k])=>k!=='transfers').sort((a,b)=>b[1]-a[1])[0];
+    html += `
+    <div style="background:rgba(255,234,167,0.06);border:1px solid rgba(255,234,167,0.2);border-radius:10px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:20px;">${trip.name.split(' ')[0]}</span>
+      <span style="font-size:13px;font-weight:600;color:var(--trips)">${trip.name} · ${trip.start.slice(5).replace('-','/')} – ${trip.end.slice(5).replace('-','/')}</span>
+      <button onclick="activeTripFilter=null;renderDashboard()" style="margin-left:auto;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--tx2);font-size:11px;padding:4px 10px;cursor:pointer;">✕ Clear</button>
     </div>
-    <div class="stat-card salary">
-      <div class="stat-label">Salary</div>
-      <div class="stat-amount" style="color:var(--salary)"><span class="currency">OMR</span>${isAll ? (SALARY*15).toFixed(3) : fmtShort(salary)}</div>
-      <div class="stat-sub">Taghreed Al Lawati · 99829595</div>
-    </div>
-    <div class="stat-card net">
-      <div class="stat-label">Net Flow</div>
-      <div class="stat-amount" style="color:${net>=0?'var(--salary)':'var(--food)'}"><span class="currency">OMR</span>${fmtShort(Math.abs(net))}</div>
-      <div><span class="stat-badge ${netColor}">${netSign}${fmtShort(net)}</span></div>
-    </div>
-    <div class="stat-card transfers-card">
-      <div class="stat-label">Transfers Sent</div>
-      <div class="stat-amount" style="color:var(--tx2)"><span class="currency">OMR</span>${fmtShort(transfers)}</div>
-      <div class="stat-sub">${txs.filter(t=>t.cat==='transfers').length} transfers</div>
-    </div>
-  </div>`;
+    <div class="stats-row">
+      <div class="stat-card spending">
+        <div class="stat-label">Trip Spending</div>
+        <div class="stat-amount"><span class="currency">OMR</span>${fmtShort(tripSpend)}</div>
+        <div class="stat-sub">${tripTxCount} transactions</div>
+      </div>
+      <div class="stat-card salary">
+        <div class="stat-label">Top Category</div>
+        <div class="stat-amount" style="color:var(--trips);font-size:18px">${CATS[topCat?.[0]]?.i || '?'} ${CATS[topCat?.[0]]?.l || '-'}</div>
+        <div class="stat-sub">${topCat ? fmtShort(topCat[1]) + ' OMR' : ''}</div>
+      </div>
+      <div class="stat-card net">
+        <div class="stat-label">Daily Average</div>
+        <div class="stat-amount" style="color:var(--paddle)"><span class="currency">OMR</span>${fmtShort(tripSpend / Math.max(1, Math.ceil((new Date(trip.end)-new Date(trip.start))/(1000*60*60*24))+1))}</div>
+        <div class="stat-sub">per day</div>
+      </div>
+      <div class="stat-card transfers-card">
+        <div class="stat-label">Transfers Sent</div>
+        <div class="stat-amount" style="color:var(--tx2)"><span class="currency">OMR</span>${fmtShort(transfers)}</div>
+        <div class="stat-sub">${txs.filter(t=>t.cat==='transfers').length} transfers</div>
+      </div>
+    </div>`;
+  } else {
+    html += `
+    <div class="stats-row">
+      <div class="stat-card spending">
+        <div class="stat-label">Total Spending</div>
+        <div class="stat-amount"><span class="currency">OMR</span>${fmtShort(total)}</div>
+        <div class="stat-sub">${txs.filter(t=>t.cat!=='transfers').length} transactions</div>
+      </div>
+      <div class="stat-card salary">
+        <div class="stat-label">Salary</div>
+        <div class="stat-amount" style="color:var(--salary)"><span class="currency">OMR</span>${isAll ? (SALARY*15).toFixed(3) : fmtShort(salary)}</div>
+        <div class="stat-sub">Monthly salary</div>
+      </div>
+      <div class="stat-card net">
+        <div class="stat-label">Net Flow</div>
+        <div class="stat-amount" style="color:${net>=0?'var(--salary)':'var(--food)'}"><span class="currency">OMR</span>${fmtShort(Math.abs(net))}</div>
+        <div><span class="stat-badge ${netColor}">${netSign}${fmtShort(net)}</span></div>
+      </div>
+      <div class="stat-card transfers-card">
+        <div class="stat-label">Transfers Sent</div>
+        <div class="stat-amount" style="color:var(--tx2)"><span class="currency">OMR</span>${fmtShort(transfers)}</div>
+        <div class="stat-sub">${txs.filter(t=>t.cat==='transfers').length} transfers</div>
+      </div>
+    </div>`;
+  }
 
   // CHARTS
   const catEntries = Object.entries(CATS).filter(([k]) => k !== 'transfers');
@@ -1660,7 +2178,7 @@ function renderDashboard() {
   </div>`;
 
   // CATEGORY CARDS (exclude transfers)
-  const catOrder = ['food','fuel','paddle','gaming','shopping','trips','personal','transport','education','transfers'];
+  const catOrder = ['food','fuel','paddle','gaming','shopping','trips','personal','transport','education','entertainment','transfers'];
   html += '<div class="cat-grid">';
   catOrder.forEach(k => {
     const v = CATS[k];
@@ -1677,11 +2195,74 @@ function renderDashboard() {
   });
   html += '</div>';
 
+  // MONEY RECEIVED SECTION
+  if (!activeTripFilter && !searchQuery) {
+    const incomeItems = isAll
+      ? [...INCOME].sort((a,b) => b.date.localeCompare(a.date))
+      : INCOME.filter(i => i.month === currentMonth).sort((a,b) => b.date.localeCompare(a.date));
+    const incomeTotal = incomeItems.reduce((s,i) => s+i.amount, 0);
+
+    let incomeRowsHtml = incomeItems.length === 0
+      ? '<div class="no-tx">No money received this month.</div>'
+      : incomeItems.map(function(i) {
+          const parts = i.date.split('-');
+          const mo = parts[1]; const day = parseInt(parts[2]);
+          const dateStr = day + ' ' + MONTH_NAMES[mo];
+          const noteStr = i.note ? i.note + ' · ' + i.date : i.date;
+          return '<div class="income-row">' +
+            '<div class="income-dot"></div>' +
+            '<div class="income-info">' +
+              '<div class="income-from">' + esc(i.from) + '</div>' +
+              '<div class="income-note">' + noteStr + '</div>' +
+            '</div>' +
+            '<div class="income-amount">+ ' + fmtShort(i.amount) + '</div>' +
+            '<div class="income-date">' + dateStr + '</div>' +
+          '</div>';
+        }).join('');
+
+    const incomeCountStr = incomeItems.length > 0
+      ? '<span style="color:var(--tx3);font-weight:400">' + incomeItems.length + ' payment' + (incomeItems.length !== 1 ? 's' : '') + '</span>'
+      : '';
+    const incomeTotalStr = incomeTotal > 0
+      ? '<div class="income-total">+ OMR ' + fmtShort(incomeTotal) + '</div>'
+      : '';
+    const toggleClass = incomeOpen ? 'income-toggle open' : 'income-toggle';
+
+    html += '<div class="income-section">' +
+      '<div class="income-header" onclick="toggleIncome()">' +
+        '<div class="income-title">' +
+          '<span style="color:var(--salary)">&#8595;</span> Money Received ' + incomeCountStr +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:12px">' +
+          incomeTotalStr +
+          '<span class="' + toggleClass + '" id="income-toggle">&#9660;</span>' +
+        '</div>' +
+      '</div>' +
+      (incomeOpen ? '<div id="income-list">' + incomeRowsHtml + '</div>' : '') +
+    '</div>';
+  }
+
   // TRANSACTIONS
-  const filtered = txs.filter(t => activeFilter === 'all' || t.cat === activeFilter);
+  // Apply search and category filter
+  // Note: if activeTripFilter is set, txs is already filtered to that trip above
+  let filtered = txs;
+
+  // If searching, search across ALL months
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = allTxs().filter(t =>
+      t.merchant.toLowerCase().includes(q) ||
+      t.amount.toFixed(3).includes(q) ||
+      t.date.includes(q) ||
+      (CATS[t.cat]?.l || '').toLowerCase().includes(q)
+    );
+  }
+
+  // Category filter
+  filtered = filtered.filter(t => activeFilter === 'all' || t.cat === activeFilter);
   const sorted = [...filtered].sort((a,b) => new Date(b.date) - new Date(a.date));
 
-  const chips = ['all','food','fuel','paddle','gaming','shopping','trips','personal','transport','education','transfers'];
+  const chips = ['all','food','fuel','paddle','gaming','shopping','trips','personal','transport','education','entertainment','transfers'];
   html += `
   <div class="tx-section">
     <div class="tx-header">
@@ -1710,11 +2291,13 @@ function renderDashboard() {
         <div class="tx-cat-dot" style="background:${cv.c}"></div>
         <div class="tx-info">
           <div class="tx-merchant">${esc(tx.merchant)}</div>
-          <div class="tx-meta">${tx.date}</div>
+          <div class="tx-meta">${tx.month ? getMonthLabel(tx.month) : tx.date}</div>
         </div>
         <div class="tx-badge" style="background:${cv.c}18;color:${cv.c}">${cv.l}</div>
         <div class="tx-amount" style="color:${cv.c}">OMR ${fmtShort(tx.amount)}</div>
         <div class="tx-date">${dateStr}</div>
+        <button class="tx-edit" onclick="openEditCat('${tx.id}')" title="Change category">✏️</button>
+        <button class="tx-delete" onclick="deleteTransaction('${tx.id}')" title="Delete">🗑️</button>
       </div>`;
     });
   }
@@ -1722,6 +2305,48 @@ function renderDashboard() {
   html += '</div></div>';
 
   document.getElementById('main').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════════
+// SEARCH & TRIP FILTER
+// ════════════════════════════════════════════════════════
+function handleSearch(val) {
+  searchQuery = val.trim();
+  activeTripFilter = null;
+  activeFilter = 'all';
+  renderDashboard();
+  // No need to re-focus — input is now permanent and keeps focus naturally
+}
+
+function clearSearch() {
+  searchQuery = '';
+  activeTripFilter = null;
+  currentView = 'monthly';
+  const vs = document.getElementById('view-select');
+  if (vs) vs.value = 'monthly';
+  const inp = document.getElementById('search-input');
+  if (inp) inp.value = '';
+  const clearBtn = document.getElementById('search-clear');
+  if (clearBtn) clearBtn.style.display = 'none';
+  renderDashboard();
+}
+
+function filterByTrip(tripId) {
+  if (activeTripFilter === tripId) {
+    activeTripFilter = null;
+  } else {
+    activeTripFilter = tripId;
+    activeFilter = 'all';
+    currentView = 'yearly';
+    const vs = document.getElementById('view-select');
+    if (vs) vs.value = 'yearly';
+  }
+  renderDashboard();
+}
+
+function toggleIncome() {
+  incomeOpen = !incomeOpen;
+  renderDashboard();
 }
 
 function filterCat(cat) {
@@ -1734,12 +2359,264 @@ function filterTx(f) {
 }
 
 // ════════════════════════════════════════════════════════
-// INIT
+// DELETE & EDIT CATEGORY
+// ════════════════════════════════════════════════════════
+
+// Overrides for hardcoded transactions (cat changes + deletes)
+// Stored in localStorage as {id: {cat, deleted}}
+let TX_OVERRIDES = {};
+let OVERRIDES_LOADED = false;
+
+function loadOverrides() {
+  try {
+    const saved = localStorage.getItem('ali_tx_overrides');
+    if (saved) TX_OVERRIDES = JSON.parse(saved);
+    else TX_OVERRIDES = {};
+  } catch(e) { TX_OVERRIDES = {}; }
+  OVERRIDES_LOADED = true;
+}
+
+function saveOverrides() {
+  localStorage.setItem('ali_tx_overrides', JSON.stringify(TX_OVERRIDES));
+}
+
+let _lastDeleted = null;
+let _toastTimer = null;
+
+function showToast(msg, undoFn) {
+  const t = document.getElementById('toast');
+  t.innerHTML = msg + (undoFn ? ' <span class="toast-undo" onclick="undoDelete()">Undo</span>' : '');
+  t.style.display = 'flex';
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { t.style.display = 'none'; _lastDeleted = null; }, 4000);
+}
+
+function undoDelete() {
+  if (!_lastDeleted) return;
+  const { type, tx, idx, id } = _lastDeleted;
+  if (type === 'dynamic') {
+    DYNAMIC_TXS.splice(idx, 0, tx);
+    saveDynamic();
+  } else {
+    delete TX_OVERRIDES[id].deleted;
+    if (Object.keys(TX_OVERRIDES[id]).length === 0) delete TX_OVERRIDES[id];
+    saveOverrides();
+  }
+  _lastDeleted = null;
+  clearTimeout(_toastTimer);
+  document.getElementById('toast').style.display = 'none';
+  renderDashboard();
+}
+
+function deleteTransaction(id) {
+  const dynIdx = DYNAMIC_TXS.findIndex(t => t.id === id);
+  if (dynIdx !== -1) {
+    const tx = DYNAMIC_TXS[dynIdx];
+    _lastDeleted = { type: 'dynamic', tx, idx: dynIdx, id };
+    DYNAMIC_TXS.splice(dynIdx, 1);
+    saveDynamic();
+  } else {
+    if (!TX_OVERRIDES) TX_OVERRIDES = {};
+    _lastDeleted = { type: 'hardcoded', id };
+    TX_OVERRIDES[id] = Object.assign({}, TX_OVERRIDES[id], { deleted: true });
+    saveOverrides();
+  }
+  renderDashboard();
+  showToast('Transaction deleted', true);
+}
+
+// Filter out deleted transactions when getting txs
+function allTxs() {
+  const hardcoded = TXS.filter(t => !TX_OVERRIDES[t.id]?.deleted).map(t => {
+    const override = TX_OVERRIDES[t.id];
+    return override?.cat ? { ...t, cat: override.cat } : t;
+  });
+  return [...hardcoded, ...DYNAMIC_TXS];
+}
+
+let editingTxId = null;
+
+function openEditCat(id) {
+  editingTxId = id;
+  const tx = allTxs().find(t => t.id === id);
+  if (!tx) return;
+  document.getElementById('edit-modal-overlay').classList.add('open');
+  document.getElementById('edit-merchant-name').textContent = tx.merchant + ' · OMR ' + fmtShort(tx.amount);
+  document.getElementById('edit-cat-select').value = tx.cat;
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal-overlay').classList.remove('open');
+  editingTxId = null;
+}
+
+function closeEditOutside(e) {
+  if (e.target === document.getElementById('edit-modal-overlay')) closeEditModal();
+}
+
+function saveEditCat() {
+  if (!editingTxId) return;
+  const newCat = document.getElementById('edit-cat-select').value;
+  // Check if dynamic tx
+  const dynTx = DYNAMIC_TXS.find(t => t.id === editingTxId);
+  if (dynTx) {
+    dynTx.cat = newCat;
+    saveDynamic();
+  } else {
+    // Hardcoded — save override
+    TX_OVERRIDES[editingTxId] = { ...TX_OVERRIDES[editingTxId], cat: newCat };
+    saveOverrides();
+  }
+  closeEditModal();
+  renderDashboard();
+}
+
+// ════════════════════════════════════════════════════════
+// MODAL — Add Transaction
+// ════════════════════════════════════════════════════════
+function openModal() {
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('m-date').value = new Date().toISOString().slice(0,10);
+  setTimeout(() => document.getElementById('m-merchant').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('m-merchant').value = '';
+  document.getElementById('m-amount').value = '';
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function saveTransaction() {
+  const merchant = document.getElementById('m-merchant').value.trim();
+  const amount = parseFloat(document.getElementById('m-amount').value);
+  const date = document.getElementById('m-date').value;
+  const cat = document.getElementById('m-cat').value;
+
+  if (!merchant) { alert('Please enter a merchant name.'); return; }
+  if (!amount || amount <= 0) { alert('Please enter a valid amount.'); return; }
+  if (!date) { alert('Please select a date.'); return; }
+
+  const month = date.slice(0,7);
+  ensureMonth(month);
+
+  const tx = {
+    id: 'manual_' + Date.now(),
+    date,
+    merchant,
+    amount: Math.round(amount * 1000) / 1000,
+    cat,
+    month,
+    source: 'manual'
+  };
+
+  DYNAMIC_TXS.push(tx);
+  saveDynamic();
+  closeModal();
+
+  currentMonth = month;
+  activeFilter = 'all';
+  currentView = 'monthly';
+  const vs = document.getElementById('view-select');
+  if (vs) vs.value = 'monthly';
+  renderMonthTabs();
+  renderDashboard();
+}
+
+// ════════════════════════════════════════════════════════
+// GMAIL SYNC
+// ════════════════════════════════════════════════════════
+async function syncGmail() {
+  const btn = document.getElementById('sync-btn');
+  btn.classList.add('syncing');
+  btn.innerHTML = '<span class="sync-dot syncing"></span> Syncing...';
+
+  try {
+    const res = await fetch('/api/sync');
+    if (res.status === 401) {
+      // Not logged in — redirect to auth
+      btn.classList.remove('syncing');
+      btn.innerHTML = '<span class="sync-dot error"></span> Login first';
+      setTimeout(() => { window.location.href = '/api/auth'; }, 1000);
+      return;
+    }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const data = await res.json();
+    const incoming = data.transactions || [];
+    const newTxs = [];
+    const existingKeys = new Set(allTxs().map(t => t.date + '_' + t.amount + '_' + t.merchant));
+
+    for (const tx of incoming) {
+      const key = tx.date + '_' + tx.amount + '_' + tx.merchant;
+      if (!existingKeys.has(key)) {
+        const month = tx.date.slice(0,7);
+        ensureMonth(month);
+        newTxs.push({ ...tx, id: 'gmail_' + Date.now() + '_' + Math.random().toString(36).slice(2), source: 'gmail', month });
+        existingKeys.add(key);
+      }
+    }
+
+    localStorage.setItem('ali_last_sync', Date.now().toString());
+    updateSyncTime();
+    if (newTxs.length > 0) {
+      DYNAMIC_TXS.push(...newTxs);
+      saveDynamic();
+      renderMonthTabs();
+      renderDashboard();
+      btn.innerHTML = '<span class="sync-dot" style="background:var(--salary)"></span> +' + newTxs.length + ' new';
+    } else {
+      btn.innerHTML = '<span class="sync-dot"></span> Up to date';
+    }
+  } catch(e) {
+    console.error('Sync error:', e);
+    btn.innerHTML = '<span class="sync-dot error"></span> Sync failed';
+  }
+
+  btn.classList.remove('syncing');
+  setTimeout(() => {
+    btn.innerHTML = '<span class="sync-dot"></span> Sync Gmail';
+  }, 3000);
+}
+
 // ════════════════════════════════════════════════════════
 // INIT
+// ════════════════════════════════════════════════════════
+loadDynamic();
 renderMonthTabs();
 renderDashboard();
 </script>
+
+<!-- ─── EDIT CATEGORY MODAL ─── -->
+<div class="modal-overlay" id="edit-modal-overlay" onclick="closeEditOutside(event)">
+  <div class="edit-modal">
+    <div class="modal-title">✏️ Change Category</div>
+    <div id="edit-merchant-name" style="font-size:13px;color:var(--tx2);margin-bottom:16px;"></div>
+    <div class="modal-field">
+      <label class="modal-label">Category</label>
+      <select class="modal-input" id="edit-cat-select">
+        <option value="food">🍔 Food</option>
+        <option value="fuel">⛽ Fuel</option>
+        <option value="paddle">🏓 Paddle</option>
+        <option value="gaming">🎮 Gaming</option>
+        <option value="personal">✦ Personal</option>
+        <option value="shopping">🛍️ Shopping</option>
+        <option value="trips">✈️ Trips</option>
+        <option value="transport">🚗 Transport</option>
+        <option value="transfers">💸 Transfers</option>
+        <option value="education">🎓 Education</option>
+        <option value="entertainment">🎬 Entertainment</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEditCat()">Save</button>
+    </div>
+  </div>
+</div>
 
 <!-- ─── ADD TRANSACTION MODAL ─── -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
@@ -1772,6 +2649,7 @@ renderDashboard();
         <option value="transport">🚗 Transport</option>
         <option value="transfers">💸 Transfers</option>
         <option value="education">🎓 Education</option>
+        <option value="entertainment">🎬 Entertainment</option>
       </select>
     </div>
     <div class="modal-footer">
@@ -1780,5 +2658,6 @@ renderDashboard();
     </div>
   </div>
 </div>
+<div id="toast" class="toast" style="display:none"></div>
 </body>
 </html>
