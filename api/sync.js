@@ -17,8 +17,8 @@ const MONTH_MAP = {
 
 function parseBMEmail(body, emailDate) {
   const descMatch = body.match(/Description\s*:\s*([^\n<\r]+)/i);
-  const amtMatch = body.match(/Amount\s*:\s*OMR\s*([\d.]+)/i);
-  const dtMatch = body.match(/Date\/Time\s*:\s*(\d{2})\s+([A-Z]{3})\s+(\d{4})/i);
+  const amtMatch  = body.match(/Amount\s*:\s*OMR\s*([\d.]+)/i);
+  const dtMatch   = body.match(/Date\/Time\s*:\s*(\d{2})\s+([A-Z]{3})\s+(\d{4})/i);
 
   if (!amtMatch) return null;
 
@@ -29,8 +29,8 @@ function parseBMEmail(body, emailDate) {
   let date;
   if (dtMatch) {
     const day = dtMatch[1];
-    const mo = MONTH_MAP[dtMatch[2].toUpperCase()] || '01';
-    const yr = dtMatch[3];
+    const mo  = MONTH_MAP[dtMatch[2].toUpperCase()] || '01';
+    const yr  = dtMatch[3];
     date = `${yr}-${mo}-${day}`;
   } else {
     date = new Date(parseInt(emailDate)).toISOString().slice(0, 10);
@@ -81,37 +81,39 @@ export default async function handler(req, res) {
     const searchRes = await gmail.users.messages.list({
       userId: 'me',
       q: 'from:NOREPLY@bankmuscat.com subject:"Account Transaction" after:2026/04/01',
-      maxResults: 100,
+      maxResults: 50,
     });
 
     const messages = searchRes.data.messages || [];
+
+    // Fetch ALL messages in parallel instead of one by one — avoids timeout
+    const fullMessages = await Promise.all(
+      messages.map(msg =>
+        gmail.users.messages.get({ userId: 'me', id: msg.id, format: 'full' })
+          .catch(() => null)
+      )
+    );
+
     const transactions = [];
+    for (const res of fullMessages) {
+      if (!res) continue;
+      const full = res.data;
+      const payload = full.payload;
+      let body = '';
 
-    for (const msg of messages) {
-      try {
-        const full = await gmail.users.messages.get({
-          userId: 'me',
-          id: msg.id,
-          format: 'full',
-        });
-
-        const payload = full.data.payload;
-        let body = '';
-
-        if (payload.body?.data) {
-          body = Buffer.from(payload.body.data, 'base64').toString('utf-8');
-        } else if (payload.parts) {
-          for (const part of payload.parts) {
-            if ((part.mimeType === 'text/html' || part.mimeType === 'text/plain') && part.body?.data) {
-              body = Buffer.from(part.body.data, 'base64').toString('utf-8');
-              break;
-            }
+      if (payload.body?.data) {
+        body = Buffer.from(payload.body.data, 'base64').toString('utf-8');
+      } else if (payload.parts) {
+        for (const part of payload.parts) {
+          if ((part.mimeType === 'text/html' || part.mimeType === 'text/plain') && part.body?.data) {
+            body = Buffer.from(part.body.data, 'base64').toString('utf-8');
+            break;
           }
         }
+      }
 
-        const tx = parseBMEmail(body, full.data.internalDate);
-        if (tx) transactions.push(tx);
-      } catch(e) {}
+      const tx = parseBMEmail(body, full.internalDate);
+      if (tx) transactions.push(tx);
     }
 
     res.status(200).json({ transactions, count: transactions.length });
