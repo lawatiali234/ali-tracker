@@ -5,10 +5,52 @@ const MONTH_MAP = {
   JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'
 };
 
+function categorizeMerchant(merchant) {
+  const m = merchant.toLowerCase();
+
+  // SKIP — self transfers and deposits
+  if (/ali raid|easy deposit|cdm deposit|inward payment|reversal/i.test(merchant)) return null;
+
+  // FOOD & DINING
+  if (/talabat|mcdonald|kfc|burger|pizza|coffee|cafe|shawarma|sushi|biryani|grill|kitchen|bakery|juice|cream|cinnabon|slider|seven brother|chick buck|land burger|steak|jollibee|hardee|swift shawarma|kucu|restaurant|dining|eatery|bistro|diner|kebab|falafel|noodle|pasta|taco|wok|bbq|barbeque|chicken|fish|seafood|sandwich|wrap|salad|soup|bake|donut|waffle|pancake|breakfast|brunch|lunch|dinner|canteen|buffet|food|meal|eat|snack|munch|bite|taste|flavour|flavor|spice|herb|fresh|organic|healthy|diet|vegan|halal|arabic|lebanese|turkish|indian|chinese|thai|japanese|korean|mexican|italian|french|american|british|mediterranean|asian|western|eastern|al maidah|tajine|machboos|harees|majboos|luqaimat|saloona|ahlain|adil|somi|sevan|adam bakery|rules coffee|cioccolat|starbucks|costa|tim horton|dunkin|subway|domino|pizza hut|hardee|popeye|raising cane|five guy|shake shack|nando|wagamama|cheesecake|baskin|cold stone|haagen|gelato|frozen|tropical|ocean|bait|gulf|arab|oman|muscat/.test(m)) return 'food';
+
+  // FUEL
+  if (/oman oil|shell|al maha|enoc|emarat|petrol|fuel|gasoline|filling station|service station|total|bp |caltex|mobil|sinopec|station.*oil|oil.*station/.test(m)) return 'fuel';
+
+  // PADDLE / SPORTS
+  if (/ace musc|mudhabi|padel|paddle|strike|squash|tennis|badminton|sport.*club|club.*sport|fitness|gym|crossfit|yoga|pilates|zumba|swimming|pool|court|arena|stadium|athletic|workout|training|exercise|playtomic/.test(m)) return 'paddle';
+
+  // GAMING
+  if (/steam|riot|gaming planet|likecard|dokan|remal|g2a|ea games|tap.*gaming|damadah|supercell|playstation|xbox|nintendo|blizzard|ubisoft|epic games|origin|battlenet|twitch|discord|game|psn|xbox live|apple arcade|google play games/.test(m)) return 'gaming';
+
+  // SHOPPING & RETAIL
+  if (/amazon|aliexpress|alibaba|noon|sultan center|carrefour|lulu|hypermarket|supermarket|mall|shopping|boutique|fashion|clothing|apparel|shoes|footwear|sport.*wear|adidas|nike|puma|reebok|zara|h&m|primark|marks|spencer|next|gap|uniqlo|ikea|home centre|pan emirate|ace hardware|hardware|electronics|apple store|samsung|huawei|xiaomi|borders|books|stationery|office|supply|pharmacy|drug|medical store|optical|jewellery|jewelry|gold|diamond|watch|accessory|bag|purse|wallet|perfume|cosmetic|beauty|skincare|haircare|salon|barber|blade|aramex|dhl|fedex|ups|delivery|courier|alsajwan|elegant art|al luban|ever baws|sky line|kiks|modern concepts/.test(m)) return 'shopping';
+
+  // TRIPS & TRAVEL
+  if (/hotel|resort|inn|hostel|airbnb|booking|expedia|flight|airline|airways|airport|terminal|lounge|visa|passport|travel|tour|trip|holiday|vacation|cruise|ferry|taxi|uber|careem|lyft|grab|tfl|metro|subway|train|bus|rent.*car|car.*rent|hertz|avis|budget rent|enterprise|harrods|harvey nichols|selfridge|fortnum|liberty|bloomingdale|saks|neiman|nordstrom|louis vuitton|gucci|prada|chanel|dior|fendi|burberry|versace|armani|ralph lauren|tommy|calvin|karwa|gulf air|oman air|emirates|etihad|qatar air|flydubai|air arabia|turkish air/.test(m)) return 'trips';
+
+  // TRANSPORT (local)
+  if (/rop traffic|etraffic|e-traffic|traffic fine|salik|parking|mawqif|nissan service|toyota service|honda service|bmw service|mercedes service|car service|auto service|tyre|tire|battery|garage|workshop|grand tire|easy travel|rta |adnoc/.test(m)) return 'transport';
+
+  // EDUCATION
+  if (/middle east college|college|university|school|institute|academy|tuition|course|training|certification|exam|test center|british council|ielts|toefl|sat |gre |gmat/.test(m)) return 'education';
+
+  // ENTERTAINMENT
+  if (/vox cinema|reel cinema|cineplex|cinema|movie|theatre|theater|concert|show|event|ticket|festival|theme park|waterpark|bowling|billiard|snooker|arcade|trampoline|laser tag|escape room|magic planet|fun zone|adventure|safari|zoo|aquarium|museum|gallery|exhibit|seen jeem|ground control|al masa|netflix|spotify|disney|hbo|prime video|youtube premium|apple tv|shahid/.test(m)) return 'entertainment';
+
+  // PERSONAL (subscriptions, health, services)
+  if (/clinic|hospital|doctor|dental|pharmacy|health|medical|lab|test|scan|xray|physio|therapy|mental|insurance|takaful|voxi|airtel|ooredoo|omantel|du telecom|etisalat|sim|mobile|recharge|microsoft|office 365|adobe|dropbox|icloud|google storage|antivirus|vpn|domain|hosting|apple\.com|itunes|app store|google play|paypal|revolut|wise|western union|moneygram|psmhelp|segpay|upg|epc|oneic|binaa|flowof life|eToro|t4trade|burjeel|prophysio|first class spa/.test(m)) return 'personal';
+
+  // TRANSFERS (wallets, sent money)
+  if (/wallet|transfer|sent to|pay to|mobile pay/.test(m)) return 'transfers';
+
+  // Default
+  return 'personal';
+}
+
 function parseBMEmail(body, emailDate) {
   const descMatch = body.match(/Description\s*:\s*([^\n<\r]+)/i);
   const amtMatch  = body.match(/Amount\s*:\s*OMR\s*([\d.]+)/i);
-  // Match both 4-digit and 2-digit years
   const dtMatch   = body.match(/Date\/Time\s*:\s*(\d{2})\s+([A-Z]{3})\s+(\d{2,4})/i);
 
   if (!amtMatch) return null;
@@ -17,11 +59,13 @@ function parseBMEmail(body, emailDate) {
   const rawDesc = descMatch ? descMatch[1].trim() : 'Bank Muscat';
   const merchant = rawDesc.replace(/^\d+-/, '').replace(/\s+\+\d+.*$/, '').trim();
 
+  const cat = categorizeMerchant(merchant);
+  if (cat === null) return null;
+
   let date;
   if (dtMatch) {
     const day = dtMatch[1].padStart(2, '0');
     const mo  = MONTH_MAP[dtMatch[2].toUpperCase()] || '01';
-    // Handle 2-digit year (26 → 2026)
     let yr = dtMatch[3];
     if (yr.length === 2) yr = '20' + yr;
     date = `${yr}-${mo}-${day}`;
@@ -29,24 +73,9 @@ function parseBMEmail(body, emailDate) {
     date = new Date(parseInt(emailDate)).toISOString().slice(0, 10);
   }
 
-  const month = date.slice(0, 7);
-  const m = merchant.toLowerCase();
-  let cat = 'personal';
-  if (/talabat|mcdonald|kfc|burger|pizza|coffee|cafe|shawarma|sushi|biryani|food|rest|grill|kitchen|bakery|juice|cream|cinnabon|slider|seven brother|chick buck|land burger|steak|jollibee|hardee|swift shawarma/.test(m)) cat = 'food';
-  else if (/oman oil|shell|al maha|fuel|petrol|enoc|emarat/.test(m)) cat = 'fuel';
-  else if (/ace musc|mudhabi|padel|paddle|strike/.test(m)) cat = 'paddle';
-  else if (/steam|riot|gaming planet|likecard|dokan|remal|g2a|ea games|tap.*gaming|damadah|supercell/.test(m)) cat = 'gaming';
-  else if (/amazon|aliexpress|alibaba|noon|sultan center|carrefour|borders|aramex|dhl/.test(m)) cat = 'shopping';
-  else if (/hotel|flight|uber|tfl|karwa|airbnb|harrods|louis vuitton|deliveroo|heathrow/.test(m)) cat = 'trips';
-  else if (/rop traffic|etraffic|parking|nissan service|grand tire/.test(m)) cat = 'transport';
-  else if (/middle east college|college|university|school|tuition/.test(m)) cat = 'education';
-  else if (/vox cinema|seen jeem|magic planet|ground control/.test(m)) cat = 'entertainment';
-  if (/ALI RAID|easy deposit|cdm deposit|inward payment|reversal/i.test(merchant)) return null;
-
-  return { date, merchant, amount, cat, month };
+  return { date, merchant, amount, cat, month: date.slice(0, 7) };
 }
 
-// Upstash helpers
 const kvGet = async (key) => {
   const url = process.env.KV_REST_API_URL;
   const token = process.env.KV_REST_API_TOKEN;
@@ -80,7 +109,6 @@ export default async function handler(req, httpRes) {
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
   try {
-    // Load already-synced message IDs from Upstash
     let syncedIds = [];
     try { syncedIds = (await kvGet('ali_synced_ids')) || []; } catch(e) {}
     const syncedSet = new Set(syncedIds);
@@ -92,16 +120,13 @@ export default async function handler(req, httpRes) {
     });
 
     const messages = (searchRes.data.messages || []).filter(m => !syncedSet.has(m.id));
-
     if (messages.length === 0) {
       return httpRes.status(200).json({ transactions: [], count: 0 });
     }
 
-    // Fetch all new messages in parallel
     const fetched = await Promise.all(
       messages.map(msg =>
-        gmail.users.messages.get({ userId: 'me', id: msg.id, format: 'full' })
-          .catch(() => null)
+        gmail.users.messages.get({ userId: 'me', id: msg.id, format: 'full' }).catch(() => null)
       )
     );
 
@@ -131,11 +156,8 @@ export default async function handler(req, httpRes) {
       }
     }
 
-    // Save updated synced IDs back to Upstash
     if (newSyncedIds.length > 0) {
-      try {
-        await kvSet('ali_synced_ids', [...syncedIds, ...newSyncedIds]);
-      } catch(e) {}
+      try { await kvSet('ali_synced_ids', [...syncedIds, ...newSyncedIds]); } catch(e) {}
     }
 
     httpRes.status(200).json({ transactions, count: transactions.length });
