@@ -1826,19 +1826,27 @@ let DYNAMIC_TXS = [];
 async function loadDynamic() {
   loadOverrides();
   updateSyncTime();
-  // Load from Upstash — syncs across all devices (PC + phone)
+  DYNAMIC_TXS = [];
+  // Load from Upstash with 3 second timeout
   try {
-    const res = await fetch('/api/transactions-get');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch('/api/transactions-get', { signal: controller.signal });
+    clearTimeout(timeout);
     if (res.ok) {
       const data = await res.json();
-      DYNAMIC_TXS = data.transactions || [];
+      DYNAMIC_TXS = Array.isArray(data.transactions) ? data.transactions : [];
       return;
     }
-  } catch(e) {}
-  // Fallback to localStorage if API unavailable
+  } catch(e) {
+    // Timeout or error — fallback to localStorage
+  }
   try {
     const saved = localStorage.getItem('ali_txs_v2');
-    if (saved) DYNAMIC_TXS = JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      DYNAMIC_TXS = Array.isArray(parsed) ? parsed : [];
+    }
   } catch(e) { DYNAMIC_TXS = []; }
 }
 
@@ -2455,6 +2463,7 @@ function deleteTransaction(id) {
 
 // Filter out deleted transactions when getting txs
 function allTxs() {
+  if (!Array.isArray(DYNAMIC_TXS)) DYNAMIC_TXS = [];
   const hardcoded = TXS.filter(t => !TX_OVERRIDES[t.id]?.deleted).map(t => {
     const override = TX_OVERRIDES[t.id];
     return override?.cat ? { ...t, cat: override.cat } : t;
@@ -2605,11 +2614,14 @@ async function syncGmail() {
     }
 
     const data = await res.json();
-    const incoming = data.transactions || [];
+    const incoming = Array.isArray(data.transactions) ? data.transactions : [];
     const newTxs = [];
-    const existingKeys = new Set(allTxs().map(t => t.date + '_' + t.amount.toFixed(3)));
+
+    if (!Array.isArray(DYNAMIC_TXS)) DYNAMIC_TXS = [];
+    const existingKeys = new Set(allTxs().map(t => t.date + '_' + parseFloat(t.amount).toFixed(3)));
 
     for (const tx of incoming) {
+      if (!tx || !tx.date || !tx.amount) continue;
       const key = tx.date + '_' + parseFloat(tx.amount).toFixed(3);
       if (!existingKeys.has(key)) {
         const month = tx.date.slice(0,7);
@@ -2623,8 +2635,8 @@ async function syncGmail() {
     updateSyncTime();
 
     if (newTxs.length > 0) {
-      DYNAMIC_TXS.push(...newTxs);
-      saveDynamic();
+      DYNAMIC_TXS = [...DYNAMIC_TXS, ...newTxs];
+      await saveDynamic();
       renderMonthTabs();
       renderDashboard();
       btn.innerHTML = '<span class="sync-dot" style="background:var(--salary)"></span> +' + newTxs.length + ' new';
@@ -2645,11 +2657,11 @@ async function syncGmail() {
 
 // ════════════════════════════════════════════════════════
 // INIT
-// ════════════════════════════════════════════════════════
-loadDynamic();
-renderMonthTabs();
-renderDashboard();
-</script>
+if (!Array.isArray(DYNAMIC_TXS)) DYNAMIC_TXS = [];
+loadDynamic().then(() => {
+  renderMonthTabs();
+  renderDashboard();
+}).catch(() => { DYNAMIC_TXS = []; renderMonthTabs(); renderDashboard(); });
 
 <!-- ─── EDIT CATEGORY MODAL ─── -->
 <div class="modal-overlay" id="edit-modal-overlay" onclick="closeEditOutside(event)">
