@@ -1877,6 +1877,13 @@ async function saveDynamic() {
 // HELPERS
 // ════════════════════════════════════════════════════════
 function fmt(n) { return 'OMR ' + n.toFixed(3); }
+
+function formatFullDate(dateStr) {
+  const months = ['January','February','March','April','May','June',
+    'July','August','September','October','November','December'];
+  const [y,m,d] = dateStr.split('-');
+  return parseInt(d) + ' ' + months[parseInt(m)-1] + ' ' + y;
+}
 function fmtShort(n) { return n.toFixed(3); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -2311,7 +2318,7 @@ function renderDashboard() {
         <div class="tx-cat-dot" style="background:${cv.c}"></div>
         <div class="tx-info">
           <div class="tx-merchant">${esc(tx.merchant)}</div>
-          <div class="tx-meta">${tx.month ? getMonthLabel(tx.month) : tx.date}</div>
+          <div class="tx-meta">${formatFullDate(tx.date)}</div>
         </div>
         <div class="tx-badge" style="background:${cv.c}18;color:${cv.c}">${cv.l}</div>
         <div class="tx-amount" style="color:${cv.c}">OMR ${fmtShort(tx.amount)}</div>
@@ -2568,10 +2575,11 @@ async function syncGmail() {
     const data = await res.json();
     const incoming = data.transactions || [];
     const newTxs = [];
-    const existingKeys = new Set(allTxs().map(t => t.date + '_' + t.amount + '_' + t.merchant));
+    // Use date+amount as duplicate key (merchant names differ between hardcoded and Gmail)
+    const existingKeys = new Set(allTxs().map(t => t.date + '_' + t.amount.toFixed(3)));
 
     for (const tx of incoming) {
-      const key = tx.date + '_' + tx.amount + '_' + tx.merchant;
+      const key = tx.date + '_' + parseFloat(tx.amount).toFixed(3);
       if (!existingKeys.has(key)) {
         const month = tx.date.slice(0,7);
         ensureMonth(month);
