@@ -8,7 +8,9 @@ const MONTH_MAP = {
 function parseBMEmail(body, emailDate) {
   const descMatch = body.match(/Description\s*:\s*([^\n<\r]+)/i);
   const amtMatch  = body.match(/Amount\s*:\s*OMR\s*([\d.]+)/i);
-  const dtMatch   = body.match(/Date\/Time\s*:\s*(\d{2})\s+([A-Z]{3})\s+(\d{4})/i);
+  // Match both 4-digit and 2-digit years
+  const dtMatch   = body.match(/Date\/Time\s*:\s*(\d{2})\s+([A-Z]{3})\s+(\d{2,4})/i);
+
   if (!amtMatch) return null;
 
   const amount = parseFloat(amtMatch[1]);
@@ -17,7 +19,12 @@ function parseBMEmail(body, emailDate) {
 
   let date;
   if (dtMatch) {
-    date = `${dtMatch[3]}-${MONTH_MAP[dtMatch[2].toUpperCase()]||'01'}-${dtMatch[1]}`;
+    const day = dtMatch[1].padStart(2, '0');
+    const mo  = MONTH_MAP[dtMatch[2].toUpperCase()] || '01';
+    // Handle 2-digit year (26 → 2026)
+    let yr = dtMatch[3];
+    if (yr.length === 2) yr = '20' + yr;
+    date = `${yr}-${mo}-${day}`;
   } else {
     date = new Date(parseInt(emailDate)).toISOString().slice(0, 10);
   }
@@ -39,14 +46,31 @@ function parseBMEmail(body, emailDate) {
   return { date, merchant, amount, cat, month };
 }
 
+// Upstash helpers
+const kvGet = async (key) => {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  const r = await fetch(`${url}/get/${key}`, { headers: { Authorization: `Bearer ${token}` } });
+  const d = await r.json();
+  return d.result ? JSON.parse(decodeURIComponent(d.result)) : null;
+};
+
+const kvSet = async (key, value) => {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  const encoded = encodeURIComponent(JSON.stringify(value));
+  await fetch(`${url}/set/${key}/${encoded}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+};
+
 export default async function handler(req, httpRes) {
   httpRes.setHeader('Access-Control-Allow-Origin', '*');
   httpRes.setHeader('Access-Control-Allow-Headers', 'Authorization');
 
-  // Get access token from Authorization header sent by browser
   const authHeader = req.headers.authorization || '';
   const accessToken = authHeader.replace('Bearer ', '').trim();
-
   if (!accessToken) {
     return httpRes.status(401).json({ error: 'Not authenticated', transactions: [] });
   }
@@ -56,14 +80,24 @@ export default async function handler(req, httpRes) {
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
   try {
+    // Load already-synced message IDs from Upstash
+    let syncedIds = [];
+    try { syncedIds = (await kvGet('ali_synced_ids')) || []; } catch(e) {}
+    const syncedSet = new Set(syncedIds);
+
     const searchRes = await gmail.users.messages.list({
       userId: 'me',
       q: 'from:NOREPLY@bankmuscat.com subject:"Account Transaction" after:2026/04/01',
       maxResults: 50,
     });
 
-    const messages = searchRes.data.messages || [];
+    const messages = (searchRes.data.messages || []).filter(m => !syncedSet.has(m.id));
 
+    if (messages.length === 0) {
+      return httpRes.status(200).json({ transactions: [], count: 0 });
+    }
+
+    // Fetch all new messages in parallel
     const fetched = await Promise.all(
       messages.map(msg =>
         gmail.users.messages.get({ userId: 'me', id: msg.id, format: 'full' })
@@ -72,7 +106,10 @@ export default async function handler(req, httpRes) {
     );
 
     const transactions = [];
-    for (const item of fetched) {
+    const newSyncedIds = [];
+
+    for (let i = 0; i < fetched.length; i++) {
+      const item = fetched[i];
       if (!item) continue;
       const full = item.data;
       const payload = full.payload;
@@ -88,7 +125,17 @@ export default async function handler(req, httpRes) {
         }
       }
       const tx = parseBMEmail(body, full.internalDate);
-      if (tx) transactions.push(tx);
+      if (tx) {
+        transactions.push(tx);
+        newSyncedIds.push(messages[i].id);
+      }
+    }
+
+    // Save updated synced IDs back to Upstash
+    if (newSyncedIds.length > 0) {
+      try {
+        await kvSet('ali_synced_ids', [...syncedIds, ...newSyncedIds]);
+      } catch(e) {}
     }
 
     httpRes.status(200).json({ transactions, count: transactions.length });
