@@ -38,6 +38,7 @@ function parseBMEmail(body, emailDate) {
 
   const month = date.slice(0, 7);
 
+  // Auto-categorize
   const m = merchant.toLowerCase();
   let cat = 'personal';
   if (/talabat|mcdonald|kfc|burger|pizza|coffee|cafe|shawarma|sushi|biryani|food|rest|grill|kitchen|bakery|juice|cream|cinnabon|slider|seven brother|chick buck|land burger|steak|jollibee|hardee|swift shawarma/i.test(m)) cat = 'food';
@@ -50,6 +51,7 @@ function parseBMEmail(body, emailDate) {
   else if (/middle east college|college|university|school|tuition/i.test(m)) cat = 'education';
   else if (/transfer|wallet/i.test(m)) cat = 'transfers';
 
+  // Skip self-transfers and deposits
   if (/ALI RAID|easy deposit|cdm deposit|inward payment|reversal/i.test(merchant)) return null;
 
   return { date, merchant, amount, cat, month };
@@ -61,7 +63,7 @@ export default async function handler(req, res) {
   const cookies = parseCookies(req.headers.cookie);
   let tokens;
   try {
-    tokens = JSON.parse(cookies.gauth || '{}');
+    tokens = JSON.parse(cookies.gTokens || '{}');
   } catch {
     return res.status(401).json({ error: 'Not authenticated', transactions: [] });
   }
@@ -79,6 +81,7 @@ export default async function handler(req, res) {
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
   try {
+    // Fetch Bank Muscat transaction emails after the hardcoded data cutoff (Mar 19 2026)
     const searchRes = await gmail.users.messages.list({
       userId: 'me',
       q: 'from:NOREPLY@bankmuscat.com subject:"Account Transaction" after:2026/03/19',
@@ -98,6 +101,7 @@ export default async function handler(req, res) {
       const payload = full.data.payload;
       let body = '';
 
+      // Extract body text
       if (payload.body?.data) {
         body = Buffer.from(payload.body.data, 'base64').toString('utf-8');
       } else if (payload.parts) {
