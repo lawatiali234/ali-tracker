@@ -54,19 +54,19 @@ function parseBMEmail(body, emailDate) {
   return { date, merchant, amount, cat, month };
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+export default async function handler(req, httpRes) {  // renamed to httpRes to avoid conflict
+  httpRes.setHeader('Access-Control-Allow-Origin', '*');
 
   const cookies = parseCookies(req.headers.cookie);
   let tokens;
   try {
     tokens = JSON.parse(cookies.gauth || '{}');
   } catch {
-    return res.status(401).json({ error: 'Not authenticated', transactions: [] });
+    return httpRes.status(401).json({ error: 'Not authenticated', transactions: [] });
   }
 
   if (!tokens.access_token) {
-    return res.status(401).json({ error: 'Not authenticated', transactions: [] });
+    return httpRes.status(401).json({ error: 'Not authenticated', transactions: [] });
   }
 
   const oauth2Client = new google.auth.OAuth2(
@@ -74,7 +74,6 @@ export default async function handler(req, res) {
     process.env.GOOGLE_CLIENT_SECRET
   );
   oauth2Client.setCredentials(tokens);
-
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
   try {
@@ -86,8 +85,8 @@ export default async function handler(req, res) {
 
     const messages = searchRes.data.messages || [];
 
-    // Fetch ALL messages in parallel instead of one by one — avoids timeout
-    const fullMessages = await Promise.all(
+    // Fetch all in parallel — avoids sequential timeout
+    const fetched = await Promise.all(
       messages.map(msg =>
         gmail.users.messages.get({ userId: 'me', id: msg.id, format: 'full' })
           .catch(() => null)
@@ -95,9 +94,9 @@ export default async function handler(req, res) {
     );
 
     const transactions = [];
-    for (const res of fullMessages) {
-      if (!res) continue;
-      const full = res.data;
+    for (const item of fetched) {   // renamed from 'res' to 'item'
+      if (!item) continue;
+      const full = item.data;
       const payload = full.payload;
       let body = '';
 
@@ -116,8 +115,9 @@ export default async function handler(req, res) {
       if (tx) transactions.push(tx);
     }
 
-    res.status(200).json({ transactions, count: transactions.length });
+    httpRes.status(200).json({ transactions, count: transactions.length });
+
   } catch (error) {
-    res.status(500).json({ error: error.message, transactions: [] });
+    httpRes.status(500).json({ error: error.message, transactions: [] });
   }
 }
