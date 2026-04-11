@@ -1,28 +1,30 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
-  // Try all possible Upstash env var name combinations
-  const url = process.env.KV_REST_API_URL ||
-              process.env.UPSTASH_REDIS_REST_URL ||
-              process.env.STORAGE_KV_REST_API_URL ||
-              process.env.STORAGE_UPSTASH_REDIS_REST_URL;
-
-  const token = process.env.KV_REST_API_TOKEN ||
-                process.env.UPSTASH_REDIS_REST_TOKEN ||
-                process.env.STORAGE_KV_REST_API_TOKEN ||
-                process.env.STORAGE_UPSTASH_REDIS_REST_TOKEN;
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
 
   if (!url || !token) {
-    return res.status(200).json({ transactions: [], debug: 'No KV env vars found' });
+    return res.status(200).json({ transactions: [] });
   }
 
   try {
-    const response = await fetch(`${url}/get/ali_manual_txs`, {
-      headers: { Authorization: `Bearer ${token}` }
+    // Upstash REST API: use pipeline format
+    const response = await fetch(`${url}/pipeline`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify([
+        ['GET', 'ali_manual_txs']
+      ])
     });
+
     const data = await response.json();
-    // data.result is the stored string — parse it
-    const transactions = data.result ? JSON.parse(data.result) : [];
+    // Pipeline returns array of results: [{ result: "value" }]
+    const raw = data[0]?.result;
+    const transactions = raw ? JSON.parse(raw) : [];
     res.status(200).json({ transactions: Array.isArray(transactions) ? transactions : [] });
   } catch (e) {
     res.status(200).json({ transactions: [], error: e.message });
