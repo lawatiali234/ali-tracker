@@ -1,11 +1,11 @@
-// api/sync.js — uses Gmail REST API directly, no googleapis dependency needed
+import { google } from 'googleapis';
 
 function parseCookies(cookieHeader) {
   const cookies = {};
   if (!cookieHeader) return cookies;
-  cookieHeader.split(';').forEach(c => {
-    const [k, ...v] = c.trim().split('=');
-    if (k) cookies[k.trim()] = decodeURIComponent(v.join('='));
+  cookieHeader.split(';').forEach(cookie => {
+    const [name, ...rest] = cookie.trim().split('=');
+    cookies[name.trim()] = decodeURIComponent(rest.join('='));
   });
   return cookies;
 }
@@ -15,25 +15,25 @@ const MONTH_MAP = {
   JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'
 };
 
-function parseBMEmail(body, internalDate) {
+function parseBMEmail(body, emailDate) {
   const descMatch = body.match(/Description\s*:\s*([^\n<\r]+)/i);
-  const amtMatch  = body.match(/Amount\s*:\s*OMR\s*([\d.]+)/i);
-  const dtMatch   = body.match(/Date\/Time\s*:\s*(\d{2})\s+([A-Z]{3})\s+(\d{4})/i);
+  const amtMatch = body.match(/Amount\s*:\s*OMR\s*([\d.]+)/i);
+  const dtMatch = body.match(/Date\/Time\s*:\s*(\d{2})\s+([A-Z]{3})\s+(\d{4})/i);
 
   if (!amtMatch) return null;
 
   const amount = parseFloat(amtMatch[1]);
   const rawDesc = descMatch ? descMatch[1].trim() : 'Bank Muscat';
-  const merchant = rawDesc.replace(/^\d+-/, '').replace(/\s+\+\d[\d\s]+.*$/, '').trim();
+  const merchant = rawDesc.replace(/^\d+-/, '').replace(/\s+\+\d+.*$/, '').trim();
 
   let date;
   if (dtMatch) {
     const day = dtMatch[1];
-    const mo  = MONTH_MAP[dtMatch[2].toUpperCase()] || '01';
-    const yr  = dtMatch[3];
+    const mo = MONTH_MAP[dtMatch[2].toUpperCase()] || '01';
+    const yr = dtMatch[3];
     date = `${yr}-${mo}-${day}`;
   } else {
-    date = new Date(parseInt(internalDate)).toISOString().slice(0, 10);
+    date = new Date(parseInt(emailDate)).toISOString().slice(0, 10);
   }
 
   const month = date.slice(0, 7);
@@ -50,82 +50,76 @@ function parseBMEmail(body, internalDate) {
   else if (/vox cinema|seen jeem|magic planet|ground control/i.test(m)) cat = 'entertainment';
   else if (/transfer|wallet/i.test(m)) cat = 'transfers';
 
-  // Skip self-transfers and deposits
   if (/ALI RAID|easy deposit|cdm deposit|inward payment|reversal/i.test(merchant)) return null;
 
   return { date, merchant, amount, cat, month };
 }
 
-function decodeBase64(str) {
-  return Buffer.from(str.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf-8');
-}
-
-function extractBody(payload) {
-  if (payload.body?.data) return decodeBase64(payload.body.data);
-  if (payload.parts) {
-    for (const part of payload.parts) {
-      if ((part.mimeType === 'text/html' || part.mimeType === 'text/plain') && part.body?.data) {
-        return decodeBase64(part.body.data);
-      }
-    }
-  }
-  return '';
-}
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
-  // Get access token from cookie
   const cookies = parseCookies(req.headers.cookie);
   let tokens;
   try {
     tokens = JSON.parse(cookies.gTokens || cookies.gauth || '{}');
-  } catch(e) {
-    return res.status(401).json({ error: 'Cookie parse error', transactions: [] });
+  } catch {
+    return res.status(401).json({ error: 'Not authenticated', transactions: [] });
   }
 
   if (!tokens.access_token) {
     return res.status(401).json({ error: 'Not authenticated', transactions: [] });
   }
 
-  const accessToken = tokens.access_token;
-  const BASE = 'https://gmail.googleapis.com/gmail/v1/users/me';
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET
+  );
+  oauth2Client.setCredentials(tokens);
+
+  const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
   try {
-    // Search for BM transaction emails after Apr 1 2026
-    const searchUrl = `${BASE}/messages?q=${encodeURIComponent('from:NOREPLY@bankmuscat.com subject:"Account Transaction" after:2026/04/01')}&maxResults=100`;
-    const searchRes = await fetch(searchUrl, {
-      headers: { Authorization: `Bearer ${accessToken}` }
+    const searchRes = await gmail.users.messages.list({
+      userId: 'me',
+      q: 'from:NOREPLY@bankmuscat.com subject:"Account Transaction" after:2026/04/01',
+      maxResults: 100,
     });
 
-    if (!searchRes.ok) {
-      const err = await searchRes.text();
-      return res.status(searchRes.status).json({ error: `Gmail search failed: ${searchRes.status} ${err}`, transactions: [] });
-    }
-
-    const searchData = await searchRes.json();
-    const messages = searchData.messages || [];
+    const messages = searchRes.data.messages || [];
     const transactions = [];
 
     for (const msg of messages) {
       try {
-        const msgRes = await fetch(`${BASE}/messages/${msg.id}?format=full`, {
-          headers: { Authorization: `Bearer ${accessToken}` }
+        const full = await gmail.users.messages.get({
+          userId: 'me',
+          id: msg.id,
+          format: 'full',
         });
-        if (!msgRes.ok) continue;
 
-        const full = await msgRes.json();
-        const body = extractBody(full.payload);
-        const tx = parseBMEmail(body, full.internalDate);
+        const payload = full.data.payload;
+        let body = '';
+
+        if (payload.body?.data) {
+          body = Buffer.from(payload.body.data, 'base64').toString('utf-8');
+        } else if (payload.parts) {
+          for (const part of payload.parts) {
+            if ((part.mimeType === 'text/html' || part.mimeType === 'text/plain') && part.body?.data) {
+              body = Buffer.from(part.body.data, 'base64').toString('utf-8');
+              break;
+            }
+          }
+        }
+
+        const tx = parseBMEmail(body, full.data.internalDate);
         if (tx) transactions.push(tx);
       } catch(e) {
-        // skip bad messages
+        // skip individual message errors
       }
     }
 
     res.status(200).json({ transactions, count: transactions.length });
-
-  } catch(error) {
+  } catch (error) {
+    console.error('Sync error:', error.message);
     res.status(500).json({ error: error.message, transactions: [] });
   }
 }
