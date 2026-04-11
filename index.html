@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Ali · Spending Dashboard</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
 :root {
@@ -2556,26 +2557,56 @@ function saveTransaction() {
 // ════════════════════════════════════════════════════════
 // GMAIL SYNC
 // ════════════════════════════════════════════════════════
+let _googleClientId = null;
+let _tokenClient = null;
+
+async function getClientId() {
+  if (_googleClientId) return _googleClientId;
+  try {
+    const r = await fetch('/api/config');
+    const d = await r.json();
+    _googleClientId = d.clientId;
+  } catch(e) {}
+  return _googleClientId;
+}
+
 async function syncGmail() {
   const btn = document.getElementById('sync-btn');
   btn.classList.add('syncing');
-  btn.innerHTML = '<span class="sync-dot syncing"></span> Syncing...';
+  btn.innerHTML = '<span class="sync-dot syncing"></span> Signing in...';
 
   try {
-    const res = await fetch('/api/sync');
-    if (res.status === 401) {
-      // Not logged in — redirect to auth
-      btn.classList.remove('syncing');
-      btn.innerHTML = '<span class="sync-dot error"></span> Login first';
-      setTimeout(() => { window.location.href = '/api/auth'; }, 1000);
-      return;
+    const clientId = await getClientId();
+    if (!clientId) throw new Error('Could not load config');
+
+    // Get token via Google Identity Services popup
+    const accessToken = await new Promise((resolve, reject) => {
+      if (!window.google) { reject(new Error('Google not loaded')); return; }
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'https://www.googleapis.com/auth/gmail.readonly',
+        callback: (response) => {
+          if (response.error) reject(new Error(response.error));
+          else resolve(response.access_token);
+        }
+      });
+      client.requestAccessToken();
+    });
+
+    btn.innerHTML = '<span class="sync-dot syncing"></span> Syncing...';
+
+    const res = await fetch('/api/sync', {
+      headers: { 'Authorization': 'Bearer ' + accessToken }
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'HTTP ' + res.status);
     }
-    if (!res.ok) throw new Error('HTTP ' + res.status);
 
     const data = await res.json();
     const incoming = data.transactions || [];
     const newTxs = [];
-    // Use date+amount as duplicate key (merchant names differ between hardcoded and Gmail)
     const existingKeys = new Set(allTxs().map(t => t.date + '_' + t.amount.toFixed(3)));
 
     for (const tx of incoming) {
@@ -2590,6 +2621,7 @@ async function syncGmail() {
 
     localStorage.setItem('ali_last_sync', Date.now().toString());
     updateSyncTime();
+
     if (newTxs.length > 0) {
       DYNAMIC_TXS.push(...newTxs);
       saveDynamic();
@@ -2599,15 +2631,16 @@ async function syncGmail() {
     } else {
       btn.innerHTML = '<span class="sync-dot"></span> Up to date';
     }
+
   } catch(e) {
     console.error('Sync error:', e);
-    btn.innerHTML = '<span class="sync-dot error"></span> Sync failed';
+    btn.innerHTML = '<span class="sync-dot error"></span> ' + (e.message || 'Sync failed');
   }
 
   btn.classList.remove('syncing');
   setTimeout(() => {
     btn.innerHTML = '<span class="sync-dot"></span> Sync Gmail';
-  }, 3000);
+  }, 4000);
 }
 
 // ════════════════════════════════════════════════════════
