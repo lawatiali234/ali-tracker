@@ -48,7 +48,6 @@ function parseBMEmail(body, emailDate) {
   else if (/rop traffic|etraffic|parking|nissan service|grand tire/i.test(m)) cat = 'transport';
   else if (/middle east college|college|university|school|tuition/i.test(m)) cat = 'education';
   else if (/vox cinema|seen jeem|magic planet|ground control/i.test(m)) cat = 'entertainment';
-  else if (/transfer|wallet/i.test(m)) cat = 'transfers';
 
   if (/ALI RAID|easy deposit|cdm deposit|inward payment|reversal/i.test(merchant)) return null;
 
@@ -61,7 +60,7 @@ export default async function handler(req, res) {
   const cookies = parseCookies(req.headers.cookie);
   let tokens;
   try {
-    tokens = JSON.parse(cookies.gTokens || cookies.gauth || '{}');
+    tokens = JSON.parse(cookies.gauth || '{}');
   } catch {
     return res.status(401).json({ error: 'Not authenticated', transactions: [] });
   }
@@ -112,14 +111,11 @@ export default async function handler(req, res) {
 
         const tx = parseBMEmail(body, full.data.internalDate);
         if (tx) transactions.push(tx);
-      } catch(e) {
-        // skip individual message errors
-      }
+      } catch(e) {}
     }
 
     res.status(200).json({ transactions, count: transactions.length });
   } catch (error) {
-    console.error('Sync error:', error.message);
     res.status(500).json({ error: error.message, transactions: [] });
   }
 }
