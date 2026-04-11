@@ -1,13 +1,23 @@
 import { google } from 'googleapis';
 
-function parseCookies(cookieHeader) {
-  const cookies = {};
-  if (!cookieHeader) return cookies;
-  cookieHeader.split(';').forEach(cookie => {
-    const [name, ...rest] = cookie.trim().split('=');
-    cookies[name.trim()] = decodeURIComponent(rest.join('='));
+async function kvGet(key) {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  const res = await fetch(`${url}/get/${key}`, {
+    headers: { Authorization: `Bearer ${token}` }
   });
-  return cookies;
+  const data = await res.json();
+  return data.result ? JSON.parse(data.result) : null;
+}
+
+async function kvSet(key, value) {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  await fetch(`${url}/set/${key}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ value: JSON.stringify(value) })
+  });
 }
 
 const MONTH_MAP = {
@@ -19,7 +29,6 @@ function parseBMEmail(body, emailDate) {
   const descMatch = body.match(/Description\s*:\s*([^\n<\r]+)/i);
   const amtMatch  = body.match(/Amount\s*:\s*OMR\s*([\d.]+)/i);
   const dtMatch   = body.match(/Date\/Time\s*:\s*(\d{2})\s+([A-Z]{3})\s+(\d{4})/i);
-
   if (!amtMatch) return null;
 
   const amount = parseFloat(amtMatch[1]);
@@ -28,10 +37,7 @@ function parseBMEmail(body, emailDate) {
 
   let date;
   if (dtMatch) {
-    const day = dtMatch[1];
-    const mo  = MONTH_MAP[dtMatch[2].toUpperCase()] || '01';
-    const yr  = dtMatch[3];
-    date = `${yr}-${mo}-${day}`;
+    date = `${dtMatch[3]}-${MONTH_MAP[dtMatch[2].toUpperCase()]||'01'}-${dtMatch[1]}`;
   } else {
     date = new Date(parseInt(emailDate)).toISOString().slice(0, 10);
   }
@@ -39,33 +45,32 @@ function parseBMEmail(body, emailDate) {
   const month = date.slice(0, 7);
   const m = merchant.toLowerCase();
   let cat = 'personal';
-  if (/talabat|mcdonald|kfc|burger|pizza|coffee|cafe|shawarma|sushi|biryani|food|rest|grill|kitchen|bakery|juice|cream|cinnabon|slider|seven brother|chick buck|land burger|steak|jollibee|hardee|swift shawarma/i.test(m)) cat = 'food';
-  else if (/oman oil|shell|al maha|fuel|petrol|enoc|emarat/i.test(m)) cat = 'fuel';
-  else if (/ace musc|mudhabi|padel|paddle|strike/i.test(m)) cat = 'paddle';
-  else if (/steam|riot|gaming planet|likecard|dokan|remal|g2a|ea games|tap.*gaming|damadah|supercell/i.test(m)) cat = 'gaming';
-  else if (/amazon|aliexpress|alibaba|noon|sultan center|carrefour|borders|aramex|dhl/i.test(m)) cat = 'shopping';
-  else if (/hotel|flight|uber|tfl|karwa|airbnb|harrods|louis vuitton|deliveroo|heathrow/i.test(m)) cat = 'trips';
-  else if (/rop traffic|etraffic|parking|nissan service|grand tire/i.test(m)) cat = 'transport';
-  else if (/middle east college|college|university|school|tuition/i.test(m)) cat = 'education';
-  else if (/vox cinema|seen jeem|magic planet|ground control/i.test(m)) cat = 'entertainment';
-
+  if (/talabat|mcdonald|kfc|burger|pizza|coffee|cafe|shawarma|sushi|biryani|food|rest|grill|kitchen|bakery|juice|cream|cinnabon|slider|seven brother|chick buck|land burger|steak|jollibee|hardee|swift shawarma/.test(m)) cat = 'food';
+  else if (/oman oil|shell|al maha|fuel|petrol|enoc|emarat/.test(m)) cat = 'fuel';
+  else if (/ace musc|mudhabi|padel|paddle|strike/.test(m)) cat = 'paddle';
+  else if (/steam|riot|gaming planet|likecard|dokan|remal|g2a|ea games|tap.*gaming|damadah|supercell/.test(m)) cat = 'gaming';
+  else if (/amazon|aliexpress|alibaba|noon|sultan center|carrefour|borders|aramex|dhl/.test(m)) cat = 'shopping';
+  else if (/hotel|flight|uber|tfl|karwa|airbnb|harrods|louis vuitton|deliveroo|heathrow/.test(m)) cat = 'trips';
+  else if (/rop traffic|etraffic|parking|nissan service|grand tire/.test(m)) cat = 'transport';
+  else if (/middle east college|college|university|school|tuition/.test(m)) cat = 'education';
+  else if (/vox cinema|seen jeem|magic planet|ground control/.test(m)) cat = 'entertainment';
   if (/ALI RAID|easy deposit|cdm deposit|inward payment|reversal/i.test(merchant)) return null;
 
   return { date, merchant, amount, cat, month };
 }
 
-export default async function handler(req, httpRes) {  // renamed to httpRes to avoid conflict
+export default async function handler(req, httpRes) {
   httpRes.setHeader('Access-Control-Allow-Origin', '*');
 
-  const cookies = parseCookies(req.headers.cookie);
+  // Get token from Upstash — no cookie needed
   let tokens;
   try {
-    tokens = JSON.parse(cookies.gauth || '{}');
-  } catch {
-    return httpRes.status(401).json({ error: 'Not authenticated', transactions: [] });
+    tokens = await kvGet('ali_gmail_token');
+  } catch(e) {
+    return httpRes.status(500).json({ error: 'KV error: ' + e.message, transactions: [] });
   }
 
-  if (!tokens.access_token) {
+  if (!tokens || !tokens.access_token) {
     return httpRes.status(401).json({ error: 'Not authenticated', transactions: [] });
   }
 
@@ -74,6 +79,13 @@ export default async function handler(req, httpRes) {  // renamed to httpRes to 
     process.env.GOOGLE_CLIENT_SECRET
   );
   oauth2Client.setCredentials(tokens);
+
+  // Auto-refresh token if expired and save back
+  oauth2Client.on('tokens', async (newTokens) => {
+    const updated = { ...tokens, ...newTokens };
+    await kvSet('ali_gmail_token', updated);
+  });
+
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
   try {
@@ -85,7 +97,6 @@ export default async function handler(req, httpRes) {  // renamed to httpRes to 
 
     const messages = searchRes.data.messages || [];
 
-    // Fetch all in parallel — avoids sequential timeout
     const fetched = await Promise.all(
       messages.map(msg =>
         gmail.users.messages.get({ userId: 'me', id: msg.id, format: 'full' })
@@ -94,12 +105,11 @@ export default async function handler(req, httpRes) {  // renamed to httpRes to 
     );
 
     const transactions = [];
-    for (const item of fetched) {   // renamed from 'res' to 'item'
+    for (const item of fetched) {
       if (!item) continue;
       const full = item.data;
       const payload = full.payload;
       let body = '';
-
       if (payload.body?.data) {
         body = Buffer.from(payload.body.data, 'base64').toString('utf-8');
       } else if (payload.parts) {
@@ -110,13 +120,11 @@ export default async function handler(req, httpRes) {  // renamed to httpRes to 
           }
         }
       }
-
       const tx = parseBMEmail(body, full.internalDate);
       if (tx) transactions.push(tx);
     }
 
     httpRes.status(200).json({ transactions, count: transactions.length });
-
   } catch (error) {
     httpRes.status(500).json({ error: error.message, transactions: [] });
   }
