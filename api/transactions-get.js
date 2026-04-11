@@ -9,22 +9,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Upstash REST API: use pipeline format
-    const response = await fetch(`${url}/pipeline`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify([
-        ['GET', 'ali_manual_txs']
-      ])
+    const response = await fetch(`${url}/get/ali_manual_txs`, {
+      headers: { Authorization: `Bearer ${token}` }
     });
 
     const data = await response.json();
-    // Pipeline returns array of results: [{ result: "value" }]
-    const raw = data[0]?.result;
-    const transactions = raw ? JSON.parse(raw) : [];
+    const transactions = data.result ? JSON.parse(decodeURIComponent(data.result)) : [];
     res.status(200).json({ transactions: Array.isArray(transactions) ? transactions : [] });
   } catch (e) {
     res.status(200).json({ transactions: [], error: e.message });
