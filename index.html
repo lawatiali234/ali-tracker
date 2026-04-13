@@ -538,6 +538,7 @@ main {
 .chip[data-f=transfers].on { background: var(--tx2); }
 .chip[data-f=education].on { background: #e17055; color: #fff; }
 .chip[data-f=entertainment].on { background: #fd79a8; color: #fff; }
+.chip[data-f=supra].on { background: #fdcb6e; color: #080a0f; }
 
 .tx-list { display: flex; flex-direction: column; }
 .tx-row {
@@ -1168,6 +1169,7 @@ const CATS = {
   transport: { l:'Transport', i:'🚗', c:'#55efc4' },
   transfers: { l:'Transfers', i:'💸', c:'#636e72' },
   education: { l:'Education', i:'🎓', c:'#e17055' },
+  supra:     { l:'Supra',     i:'🏎️', c:'#fdcb6e' },
   entertainment: { l:'Entertainment', i:'🎬', c:'#fd79a8' },
 };
 
@@ -1393,7 +1395,7 @@ const TXS = [
 {id:'t176',date:'2025-06-08',merchant:"McDonald's",amount:6.422,cat:'food',month:'2025-06'},
 {id:'t177',date:'2025-06-08',merchant:'Talabat',amount:2.290,cat:'food',month:'2025-06'},
 {id:'t178',date:'2025-06-10',merchant:'Elegant Art LLC',amount:5.830,cat:'shopping',month:'2025-06'},
-{id:'t179',date:'2025-06-09',merchant:'Alibaba.com Singapore',amount:239.850,cat:'shopping',month:'2025-06'},
+{id:'t179',date:'2025-06-09',merchant:'Alibaba.com Singapore',amount:239.850,cat:'supra',month:'2025-06'},
 {id:'t180',date:'2025-06-11',merchant:'Talabat',amount:5.910,cat:'food',month:'2025-06'},
 {id:'t181',date:'2025-06-15',merchant:"McDonald's",amount:5.396,cat:'food',month:'2025-06'},
 {id:'t182',date:'2025-06-15',merchant:'Magic Planet',amount:1.160,cat:'entertainment',month:'2025-06'},
@@ -1424,8 +1426,8 @@ const TXS = [
 {id:'t205',date:'2025-08-02',merchant:"Shah's Halal Food (London) 🇬🇧",amount:15.210,cat:'trips',month:'2025-08'},
 {id:'t206',date:'2025-08-01',merchant:'Abdul Aziz Ibrahim Al Balushi (Wallet)',amount:88.000,cat:'transfers',month:'2025-08'},
 {id:'t207',date:'2025-08-03',merchant:'Qutada Abdullah Al Fazl (Wallet)',amount:63.300,cat:'transfers',month:'2025-08'},
-{id:'t208',date:'2025-08-03',merchant:'Mohammed Nasser Al Mawali (Wallet)',amount:500.000,cat:'transfers',month:'2025-08'},
-{id:'t209',date:'2025-08-03',merchant:'Mohammed Nasser Al Mawali (Wallet)',amount:20.000,cat:'transfers',month:'2025-08'},
+{id:'t208',date:'2025-08-03',merchant:'MOHASSER (Wallet)',amount:500.000,cat:'supra',month:'2025-08'},
+{id:'t209',date:'2025-08-03',merchant:'MOHASSER (Wallet)',amount:20.000,cat:'supra',month:'2025-08'},
 {id:'t210',date:'2025-08-04',merchant:'DK CPH Gasoline (Copenhagen) 🇩🇰',amount:11.310,cat:'trips',month:'2025-08'},
 {id:'t211',date:'2025-08-06',merchant:'Ace MUSC',amount:9.300,cat:'paddle',month:'2025-08'},
 {id:'t212',date:'2025-08-06',merchant:'Top Bous',amount:6.000,cat:'food',month:'2025-08'},
@@ -1451,7 +1453,7 @@ const TXS = [
 {id:'t232',date:'2025-08-14',merchant:'KIKS',amount:1.200,cat:'shopping',month:'2025-08'},
 {id:'t233',date:'2025-08-14',merchant:'First Food Service LLC',amount:30.000,cat:'food',month:'2025-08'},
 {id:'t234',date:'2025-08-14',merchant:'Cold Stone',amount:8.400,cat:'food',month:'2025-08'},
-{id:'t235',date:'2025-08-15',merchant:'Mohammed Nasser Al Mawali (Wallet)',amount:138.000,cat:'transfers',month:'2025-08'},
+{id:'t235',date:'2025-08-15',merchant:'MOHASSER (Wallet)',amount:138.000,cat:'supra',month:'2025-08'},
 {id:'t236',date:'2025-08-16',merchant:'Oman Oil - Mawleh',amount:7.000,cat:'fuel',month:'2025-08'},
 {id:'t237',date:'2025-08-17',merchant:'Talabat',amount:3.690,cat:'food',month:'2025-08'},
 {id:'t238',date:'2025-08-20',merchant:'Al Luban Land MUSC',amount:4.000,cat:'shopping',month:'2025-08'},
@@ -1526,6 +1528,7 @@ const TXS = [
 {id:'t306',date:'2025-09-28',merchant:'Talabat',amount:5.925,cat:'food',month:'2025-09'},
 {id:'t307',date:'2025-09-29',merchant:'Game Arena',amount:0.900,cat:'gaming',month:'2025-09'},
 {id:'t308',date:'2025-09-28',merchant:'Ali Mustafa Ahmed Al Lawati (Wallet)',amount:1.530,cat:'transfers',month:'2025-09'},
+{id:'t308b',date:'2025-09-22',merchant:'MOOSHSIN (Wallet)',amount:40.000,cat:'supra',month:'2025-09'},
 // OCT 2025
 {id:'t309',date:'2025-09-29',merchant:'Omantel Mobile App (x5)',amount:16.870,cat:'personal',month:'2025-10'},
 {id:'t310',date:'2025-10-04',merchant:'Grand Tire',amount:5.000,cat:'transport',month:'2025-10'},
@@ -1622,7 +1625,7 @@ const TXS = [
 {id:'t399',date:'2025-12-12',merchant:'Karak Raqeeb',amount:0.200,cat:'food',month:'2025-12'},
 {id:'t400',date:'2025-12-12',merchant:'Alsajwan International Shop',amount:6.636,cat:'shopping',month:'2025-12'},
 {id:'t401',date:'2025-12-14',merchant:'Oman Oil - Ghoubra Beach',amount:5.000,cat:'fuel',month:'2025-12'},
-{id:'t402',date:'2025-12-13',merchant:'Mohammed Nasser Al Mawali (Wallet)',amount:500.000,cat:'transfers',month:'2025-12'},
+{id:'t402',date:'2025-12-13',merchant:'MOHASSER (Wallet)',amount:500.000,cat:'supra',month:'2025-12'},
 {id:'t403',date:'2025-12-15',merchant:'Talabat',amount:3.890,cat:'food',month:'2025-12'},
 {id:'t404',date:'2025-12-14',merchant:'Talabat',amount:8.050,cat:'food',month:'2025-12'},
 {id:'t405',date:'2025-12-18',merchant:'Rules Coffee MUSC',amount:1.200,cat:'food',month:'2025-12'},
@@ -1713,17 +1716,18 @@ const TXS = [
 {id:'t488',date:'2026-02-13',merchant:'Raising Canes Alshaya (Dubai) 🇦🇪',amount:15.150,cat:'trips',month:'2026-02'},
 {id:'t489',date:'2026-02-14',merchant:'ENOC (Dubai) 🇦🇪',amount:10.390,cat:'trips',month:'2026-02'},
 {id:'t489b',date:'2026-02-14',merchant:'Emarat Ajman (Dubai) 🇦🇪',amount:3.237,cat:'trips',month:'2026-02'},
+{id:'t489d',date:'2026-02-14',merchant:'MOHASSER (Wallet)',amount:250.000,cat:'supra',month:'2026-02'},
 {id:'t489c',date:'2026-02-14',merchant:'Oman Oil Aqar Twin',amount:6.300,cat:'fuel',month:'2026-02'},
 {id:'t490',date:'2026-02-16',merchant:'Oman Oil - Airport',amount:13.000,cat:'fuel',month:'2026-02'},
-{id:'t491',date:'2026-02-18',merchant:'Mohammed Nasser Al Mawali (Wallet)',amount:200.000,cat:'transfers',month:'2026-02'},
+{id:'t491',date:'2026-02-18',merchant:'MOHASSER (Wallet)',amount:200.000,cat:'supra',month:'2026-02'},
 {id:'t492',date:'2026-02-18',merchant:'Mohammed Mubarak Al Amry (Wallet)',amount:30.000,cat:'transfers',month:'2026-02'},
 {id:'t493',date:'2026-02-18',merchant:'The Land Smokehouse',amount:56.280,cat:'food',month:'2026-02'},
 {id:'t494',date:'2026-02-18',merchant:'Serve Al Q',amount:3.300,cat:'food',month:'2026-02'},
 {id:'t495',date:'2026-02-20',merchant:'Mudhabi Bin Amer',amount:11.395,cat:'paddle',month:'2026-02'},
 {id:'t496',date:'2026-02-20',merchant:'Ace MUSC',amount:17.075,cat:'paddle',month:'2026-02'},
-{id:'t497',date:'2026-02-18',merchant:'AliExpress',amount:1.080,cat:'shopping',month:'2026-02'},
+{id:'t497',date:'2026-02-18',merchant:'AliExpress',amount:1.080,cat:'supra',month:'2026-02'},
 {id:'t498',date:'2026-02-20',merchant:'Oman Oil - Ghoubra Beach',amount:13.600,cat:'fuel',month:'2026-02'},
-{id:'t499',date:'2026-02-18',merchant:'AliExpress',amount:9.390,cat:'shopping',month:'2026-02'},
+{id:'t499',date:'2026-02-18',merchant:'AliExpress',amount:9.390,cat:'supra',month:'2026-02'},
 {id:'t500',date:'2026-02-21',merchant:'Ace MUSC',amount:8.000,cat:'paddle',month:'2026-02'},
 {id:'t501',date:'2026-02-22',merchant:'Shahab Rasheed (Wallet)',amount:3.000,cat:'transfers',month:'2026-02'},
 {id:'t502',date:'2026-02-23',merchant:'Jollibee',amount:9.050,cat:'food',month:'2026-02'},
@@ -1732,14 +1736,14 @@ const TXS = [
 {id:'t505',date:'2026-02-23',merchant:'Al Hail Health Centre',amount:1.200,cat:'personal',month:'2026-02'},
 {id:'t506',date:'2026-02-23',merchant:'Ace MUSC',amount:6.675,cat:'paddle',month:'2026-02'},
 {id:'t507',date:'2026-02-23',merchant:'New Silk Route Restaurant',amount:4.400,cat:'food',month:'2026-02'},
-{id:'t508',date:'2026-02-22',merchant:'AliExpress',amount:266.460,cat:'shopping',month:'2026-02'},
+{id:'t508',date:'2026-02-22',merchant:'AliExpress',amount:266.460,cat:'supra',month:'2026-02'},
 {id:'t509',date:'2026-02-25',merchant:"McDonald's",amount:6.180,cat:'food',month:'2026-02'},
-{id:'t510',date:'2026-02-24',merchant:'AliExpress.com',amount:18.750,cat:'shopping',month:'2026-02'},
+{id:'t510',date:'2026-02-24',merchant:'AliExpress.com',amount:18.750,cat:'supra',month:'2026-02'},
 {id:'t511',date:'2026-02-25',merchant:'Ace MUSC',amount:5.600,cat:'paddle',month:'2026-02'},
 {id:'t512',date:'2026-02-26',merchant:'Oman Oil - Ghoubra Beach',amount:11.400,cat:'fuel',month:'2026-02'},
 // MAR 2026 (additional — from Gmail after Mar 19)
 {id:'t531',date:'2026-03-22',merchant:'Cafe Bateel MUSC',amount:2.508,cat:'food',month:'2026-03'},
-{id:'t531b',date:'2026-03-22',merchant:'MOHASSER (Wallet)',amount:350.000,cat:'transfers',month:'2026-03'},
+{id:'t531b',date:'2026-03-22',merchant:'MOHASSER (Wallet)',amount:350.000,cat:'supra',month:'2026-03'},
 {id:'t532',date:'2026-03-23',merchant:'Sultan Center Qurum',amount:1.175,cat:'shopping',month:'2026-03'},
 {id:'t533',date:'2026-03-23',merchant:'Dubizzle.com Dubai',amount:3.284,cat:'shopping',month:'2026-03'},
 {id:'t534',date:'2026-03-24',merchant:'Abu Rateb 18 Nov Street',amount:2.835,cat:'food',month:'2026-03'},
@@ -1753,13 +1757,14 @@ const TXS = [
 {id:'t540b',date:'2026-03-27',merchant:'Tea Corner Qurum',amount:0.525,cat:'food',month:'2026-03'},
 {id:'t541',date:'2026-03-28',merchant:'Oman Oil - Mawah',amount:0.800,cat:'fuel',month:'2026-03'},
 {id:'t542',date:'2026-03-28',merchant:'Talabat',amount:3.290,cat:'food',month:'2026-03'},
-{id:'t543',date:'2026-03-29',merchant:'MOHASSER (Wallet)',amount:30.000,cat:'transfers',month:'2026-03'},
+{id:'t543',date:'2026-03-29',merchant:'MOHASSER (Wallet)',amount:30.000,cat:'supra',month:'2026-03'},
 {id:'t543b',date:'2026-03-29',merchant:'Talabat',amount:4.310,cat:'food',month:'2026-03'},
+{id:'t543d',date:'2026-03-11',merchant:'MOOSHSIN (Wallet)',amount:65.000,cat:'supra',month:'2026-03'},
 {id:'t543c',date:'2026-03-30',merchant:'ALI RAID (Wallet)',amount:37.000,cat:'transfers',month:'2026-03'},
 {id:'t544',date:'2026-03-31',merchant:'Talabat',amount:3.120,cat:'food',month:'2026-03'},
 // APR 2026 (Gmail synced + from bank app screenshot)
 {id:'t545',date:'2026-04-02',merchant:'Ace MUSC',amount:6.400,cat:'paddle',month:'2026-04'},
-{id:'t545b',date:'2026-04-02',merchant:'MOOSHSIN (Wallet)',amount:80.000,cat:'transfers',month:'2026-04'},
+{id:'t545b',date:'2026-04-02',merchant:'MOOSHSIN (Wallet)',amount:80.000,cat:'supra',month:'2026-04'},
 {id:'t545c',date:'2026-04-04',merchant:'Ace MUSC',amount:6.400,cat:'paddle',month:'2026-04'},
 {id:'t546',date:'2026-04-04',merchant:'KUCU OMAN',amount:0.100,cat:'food',month:'2026-04'},
 {id:'t547',date:'2026-04-04',merchant:'HASSIDER (Wallet)',amount:90.000,cat:'transfers',month:'2026-04'},
@@ -2192,7 +2197,7 @@ function renderDashboard() {
   </div>`;
 
   // CATEGORY CARDS (exclude transfers)
-  const catOrder = ['food','fuel','paddle','gaming','shopping','trips','personal','transport','education','entertainment','transfers'];
+  const catOrder = ['food','fuel','paddle','gaming','shopping','trips','personal','transport','education','entertainment','supra','transfers'];
   html += '<div class="cat-grid">';
   catOrder.forEach(k => {
     const v = CATS[k];
@@ -2276,7 +2281,7 @@ function renderDashboard() {
   filtered = filtered.filter(t => activeFilter === 'all' || t.cat === activeFilter);
   const sorted = [...filtered].sort((a,b) => new Date(b.date) - new Date(a.date));
 
-  const chips = ['all','food','fuel','paddle','gaming','shopping','trips','personal','transport','education','entertainment','transfers'];
+  const chips = ['all','food','fuel','paddle','gaming','shopping','trips','personal','transport','education','entertainment','supra','transfers'];
   html += `
   <div class="tx-section">
     <div class="tx-header">
@@ -2634,11 +2639,12 @@ async function syncGmail() {
 }
 
 // ════════════════════════════════════════════════════════
-// INIT — load from localStorage immediately, then render
+// INIT — render immediately with localStorage, then sync with Upstash
 DYNAMIC_TXS = [];
 try { loadOverrides(); } catch(e) { TX_OVERRIDES = {}; }
 try { updateSyncTime(); } catch(e) {}
-// Load from localStorage (fast, works offline and locally)
+
+// Load from localStorage first for instant render
 try {
   const saved = localStorage.getItem('ali_txs_v2');
   if (saved) {
@@ -2646,6 +2652,7 @@ try {
     if (Array.isArray(parsed)) DYNAMIC_TXS = parsed;
   }
 } catch(e) {}
+
 try { renderMonthTabs(); } catch(e) {}
 try {
   renderDashboard();
@@ -2654,17 +2661,24 @@ try {
     '<div style="padding:40px;color:#ff6b81;font-family:monospace">Render error: ' + e.message + '</div>';
 }
 
-// Load Upstash transactions in background (only on Vercel, not local)
+// Always load from Upstash after render — Upstash always wins (syncs both directions)
 if (location.hostname !== 'localhost' && location.protocol !== 'file:') {
   (async () => {
     try {
       const controller = new AbortController();
-      setTimeout(() => controller.abort(), 3000);
+      setTimeout(() => controller.abort(), 4000);
       const res = await fetch('/api/transactions-get', { signal: controller.signal });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data.transactions) && data.transactions.length > 0) {
-          DYNAMIC_TXS = data.transactions;
+        const upstashTxs = Array.isArray(data.transactions) ? data.transactions : [];
+        // Upstash always wins — merge local and remote, Upstash takes priority
+        const localIds = new Set(upstashTxs.map(t => t.id));
+        const localOnly = DYNAMIC_TXS.filter(t => !localIds.has(t.id));
+        const merged = [...upstashTxs, ...localOnly];
+        if (merged.length !== DYNAMIC_TXS.length || upstashTxs.length > 0) {
+          DYNAMIC_TXS = merged;
+          // Save merged back to localStorage
+          localStorage.setItem('ali_txs_v2', JSON.stringify(DYNAMIC_TXS));
           try { renderMonthTabs(); renderDashboard(); } catch(e) {}
         }
       }
@@ -2692,6 +2706,7 @@ if (location.hostname !== 'localhost' && location.protocol !== 'file:') {
         <option value="transfers">💸 Transfers</option>
         <option value="education">🎓 Education</option>
         <option value="entertainment">🎬 Entertainment</option>
+        <option value="supra">🏎️ Supra</option>
       </select>
     </div>
     <div class="modal-footer">
@@ -2733,6 +2748,7 @@ if (location.hostname !== 'localhost' && location.protocol !== 'file:') {
         <option value="transfers">💸 Transfers</option>
         <option value="education">🎓 Education</option>
         <option value="entertainment">🎬 Entertainment</option>
+        <option value="supra">🏎️ Supra</option>
       </select>
     </div>
     <div class="modal-footer">
