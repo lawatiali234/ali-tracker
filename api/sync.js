@@ -8,6 +8,9 @@ const MONTH_MAP = {
 function categorizeMerchant(merchant) {
   const m = merchant.toLowerCase();
 
+  // SUPRA — car related transfers and AliExpress/Alibaba
+  if (/mooshsin|mohasser|aliexpress|alibaba/.test(m)) return 'supra';
+
   // SKIP — self transfers and deposits
   if (/ali raid|easy deposit|cdm deposit|inward payment|reversal/i.test(merchant)) return null;
 
