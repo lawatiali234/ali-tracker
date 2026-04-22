@@ -2216,9 +2216,13 @@ function renderDashboard() {
 
   // MONEY RECEIVED SECTION
   if (!activeTripFilter && !searchQuery) {
+    const dynamicIncome = DYNAMIC_TXS.filter(t => t.cat === 'income').map(t => ({
+      id: t.id, date: t.date, from: t.merchant.replace('↓ Received from ', ''), amount: t.amount, month: t.month, note: 'Synced'
+    }));
+    const allIncome = [...INCOME, ...dynamicIncome];
     const incomeItems = isAll
-      ? [...INCOME].sort((a,b) => b.date.localeCompare(a.date))
-      : INCOME.filter(i => i.month === currentMonth).sort((a,b) => b.date.localeCompare(a.date));
+      ? [...allIncome].sort((a,b) => b.date.localeCompare(a.date))
+      : allIncome.filter(i => i.month === currentMonth).sort((a,b) => b.date.localeCompare(a.date));
     const incomeTotal = incomeItems.reduce((s,i) => s+i.amount, 0);
 
     let incomeRowsHtml = incomeItems.length === 0
