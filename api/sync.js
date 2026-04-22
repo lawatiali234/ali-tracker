@@ -67,41 +67,40 @@ function parseSentEmail(body, emailDate) {
 
 function parseReceivedEmail(body, emailDate) {
   // "You have received OMR X from NAME in your a/c"
-  const match = body.match(/You have received OMR\s*([\d.]+)\s+from\s+([^\s<\n]+)/i);
+  // First check full body for ALI RAID before any parsing
+  if (/ALI RAID/i.test(body)) return null;
+
+  const match = body.match(/You have received OMR\s*([\d.]+)\s+from\s+(.+?)\s+in your/i);
   if (!match) return null;
 
   const amount = parseFloat(match[1]);
   const sender = match[2].trim();
 
-  // Skip ALI RAID self transfers
-  if (/ALI RAID|ALI RAID MOHAMED/i.test(sender)) return null;
+  // Double check sender name
+  if (/ALI RAID|ALI LAWATI/i.test(sender)) return null;
 
   const date = new Date(parseInt(emailDate)).toISOString().slice(0, 10);
-
   return { date, merchant: sender, amount, cat: 'income', month: date.slice(0, 7) };
 }
 
 function parseCreditDebitEmail(body, emailDate) {
   // "Your account has been credited/debited by OMR X"
-  // Skip ALI RAID self transfers, Cash Deposits, Easy Deposits
+  // Skip ALL ALI RAID transfers (self transfers between own accounts), Cash Deposits
   if (/ALI RAID|CASH DEP|EASY DEPOSIT|CDM|ATM/i.test(body)) return null;
 
-  const creditMatch = body.match(/credited by OMR\s*([\d.]+)/i);
-  const debitMatch  = body.match(/debited by OMR\s*([\d.]+)/i);
-  const nameMatch   = body.match(/Transfer\s+([A-Z\s]+?)(?:\s+LFT|\s+Txn|<|\n)/i);
+  const debitMatch = body.match(/debited by OMR\s*([\d.]+)/i);
+  if (!debitMatch) return null; // only process debits (outgoing transfers)
 
-  if (!creditMatch && !debitMatch) return null;
-  const amount = parseFloat((creditMatch || debitMatch)[1]);
+  const amount = parseFloat(debitMatch[1]);
+  const nameMatch = body.match(/Transfer\s+([A-Z][A-Z\s]+?)(?:\s+LFT|\s+Txn|<|\n|$)/i);
   const name = nameMatch ? nameMatch[1].trim() : 'Transfer';
 
   if (/ALI RAID/i.test(name)) return null;
 
   const date = new Date(parseInt(emailDate)).toISOString().slice(0, 10);
-  const isCredit = !!creditMatch;
-  const cat = isCredit ? 'income' : (/mooshsin|mohasser/i.test(name) ? 'supra' : 'transfers');
-  const merchant = isCredit ? `↓ Received from ${name}` : `${name} (Wallet)`;
+  const cat = /mooshsin|mohasser/i.test(name) ? 'supra' : 'transfers';
 
-  return { date, merchant, amount, cat, month: date.slice(0, 7) };
+  return { date, merchant: `${name} (Wallet)`, amount, cat, month: date.slice(0, 7) };
 }
 
 function parseEmail(body, emailDate) {
