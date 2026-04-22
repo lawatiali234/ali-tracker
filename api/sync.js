@@ -8,8 +8,8 @@ const MONTH_MAP = {
 function categorizeMerchant(merchant) {
   const m = merchant.toLowerCase();
   if (/ali raid/i.test(merchant)) return null; // skip self transfers
-  if (/mooshsin|mohasser|aliexpress|alibaba/.test(m)) return 'supra';
-  if (/talabat|mcdonald|kfc|burger|pizza|coffee|cafe|shawarma|sushi|biryani|grill|kitchen|bakery|juice|cream|cinnabon|slider|seven brother|chick buck|land burger|steak|jollibee|hardee|swift shawarma|kucu|restaurant|dining|eatery|tea time|tea corner|tea path|rules coffee|cioccolat|starbucks|costa|dunkin|subway|domino|pizza hut|popeye|raising cane|five guy|shake shack|nando|baskin|cold stone|frozen|tropical|ahlain|adil|somi|adam bakery|ocean mart|take biryani|bait|gulf|healthy bar|top bous|serve|land smokehouse|jollibee/.test(m)) return 'food';
+  if (/mooshsin|mohasser|aliexpress|alibaba|ugr/.test(m)) return 'supra';
+  if (/talabat|mcdonald|kfc|burger|pizza|coffee|cafe|shawarma|sushi|biryani|grill|kitchen|bakery|juice|cream|cinnabon|slider|seven brother|chick buck|land burger|steak|jollibee|hardee|swift shawarma|kucu|restaurant|dining|eatery|\btea\b|tea time|tea corner|tea path|rules coffee|cioccolat|starbucks|costa|dunkin|subway|domino|pizza hut|popeye|raising cane|five guy|shake shack|nando|baskin|cold stone|frozen|tropical|ahlain|adil|somi|adam bakery|ocean mart|take biryani|bait|gulf|healthy bar|top bous|serve|land smokehouse|jollibee/.test(m)) return 'food';
   if (/oman oil|shell|al maha|enoc|emarat|petrol|fuel|gasoline|filling station/.test(m)) return 'fuel';
   if (/ace musc|mudhabi|padel|paddle|strike|playtomic|muscat sport/.test(m)) return 'paddle';
   if (/steam|riot|gaming planet|likecard|dokan|remal|g2a|ea games|tap.*gaming|damadah|supercell|playstation|xbox|nintendo|blizzard|ubisoft|epic games/.test(m)) return 'gaming';
