@@ -74,17 +74,17 @@ function parseReceivedEmail(body, emailDate) {
   const sender = match[2].trim();
 
   // Skip ALI RAID self transfers
-  if (/ALI RAID/i.test(sender)) return null;
+  if (/ALI RAID|ALI RAID MOHAMED/i.test(sender)) return null;
 
   const date = new Date(parseInt(emailDate)).toISOString().slice(0, 10);
 
-  return { date, merchant: `↓ Received from ${sender}`, amount, cat: 'transfers', month: date.slice(0, 7) };
+  return { date, merchant: sender, amount, cat: 'income', month: date.slice(0, 7) };
 }
 
 function parseCreditDebitEmail(body, emailDate) {
   // "Your account has been credited/debited by OMR X"
-  // Skip ALI RAID and Cash Dep entries
-  if (/ALI RAID|CASH DEP|EASY DEPOSIT/i.test(body)) return null;
+  // Skip ALI RAID self transfers, Cash Deposits, Easy Deposits
+  if (/ALI RAID|CASH DEP|EASY DEPOSIT|CDM|ATM/i.test(body)) return null;
 
   const creditMatch = body.match(/credited by OMR\s*([\d.]+)/i);
   const debitMatch  = body.match(/debited by OMR\s*([\d.]+)/i);
@@ -98,7 +98,7 @@ function parseCreditDebitEmail(body, emailDate) {
 
   const date = new Date(parseInt(emailDate)).toISOString().slice(0, 10);
   const isCredit = !!creditMatch;
-  const cat = /mooshsin|mohasser/i.test(name) ? 'supra' : 'transfers';
+  const cat = isCredit ? 'income' : (/mooshsin|mohasser/i.test(name) ? 'supra' : 'transfers');
   const merchant = isCredit ? `↓ Received from ${name}` : `${name} (Wallet)`;
 
   return { date, merchant, amount, cat, month: date.slice(0, 7) };
