@@ -2607,11 +2607,11 @@ async function syncGmail() {
     const newTxs = [];
 
     if (!Array.isArray(DYNAMIC_TXS)) DYNAMIC_TXS = [];
-    const existingKeys = new Set(allTxs().map(t => t.date + '_' + parseFloat(t.amount).toFixed(3)));
+    const existingKeys = new Set(allTxs().map(t => t.date + '_' + parseFloat(t.amount).toFixed(3) + '_' + (t.merchant||'').toLowerCase().slice(0,8)));
 
     for (const tx of incoming) {
       if (!tx || !tx.date || !tx.amount) continue;
-      const key = tx.date + '_' + parseFloat(tx.amount).toFixed(3);
+      const key = tx.date + '_' + parseFloat(tx.amount).toFixed(3) + '_' + (tx.merchant||'').toLowerCase().slice(0,8);
       if (!existingKeys.has(key)) {
         const month = tx.date.slice(0,7);
         ensureMonth(month);
