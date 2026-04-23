@@ -539,6 +539,7 @@ main {
 .chip[data-f=education].on { background: #e17055; color: #fff; }
 .chip[data-f=entertainment].on { background: #fd79a8; color: #fff; }
 .chip[data-f=supra].on { background: #fdcb6e; color: #080a0f; }
+.chip[data-f=investments].on { background: #00cec9; color: #080a0f; }
 
 .tx-list { display: flex; flex-direction: column; }
 .tx-row {
@@ -1169,7 +1170,8 @@ const CATS = {
   transport: { l:'Transport', i:'🚗', c:'#55efc4' },
   transfers: { l:'Transfers', i:'💸', c:'#636e72' },
   education: { l:'Education', i:'🎓', c:'#e17055' },
-  supra:     { l:'Supra',     i:'🏎️', c:'#fdcb6e' },
+  supra:        { l:'Supra',       i:'🏎️', c:'#fdcb6e' },
+  investments:  { l:'Investments', i:'📈', c:'#00cec9' },
   entertainment: { l:'Entertainment', i:'🎬', c:'#fd79a8' },
 };
 
@@ -2197,7 +2199,7 @@ function renderDashboard() {
   </div>`;
 
   // CATEGORY CARDS (exclude transfers)
-  const catOrder = ['food','fuel','paddle','gaming','shopping','trips','personal','transport','education','entertainment','supra','transfers'];
+  const catOrder = ['food','fuel','paddle','gaming','shopping','trips','personal','transport','education','entertainment','supra','investments','transfers'];
   html += '<div class="cat-grid">';
   catOrder.forEach(k => {
     const v = CATS[k];
@@ -2285,7 +2287,7 @@ function renderDashboard() {
   filtered = filtered.filter(t => activeFilter === 'all' || t.cat === activeFilter);
   const sorted = [...filtered].sort((a,b) => new Date(b.date) - new Date(a.date));
 
-  const chips = ['all','food','fuel','paddle','gaming','shopping','trips','personal','transport','education','entertainment','supra','transfers'];
+  const chips = ['all','food','fuel','paddle','gaming','shopping','trips','personal','transport','education','entertainment','supra','investments','transfers'];
   html += `
   <div class="tx-section">
     <div class="tx-header">
@@ -2711,6 +2713,7 @@ if (location.hostname !== 'localhost' && location.protocol !== 'file:') {
         <option value="education">🎓 Education</option>
         <option value="entertainment">🎬 Entertainment</option>
         <option value="supra">🏎️ Supra</option>
+        <option value="investments">📈 Investments</option>
       </select>
     </div>
     <div class="modal-footer">
@@ -2753,6 +2756,7 @@ if (location.hostname !== 'localhost' && location.protocol !== 'file:') {
         <option value="education">🎓 Education</option>
         <option value="entertainment">🎬 Entertainment</option>
         <option value="supra">🏎️ Supra</option>
+        <option value="investments">📈 Investments</option>
       </select>
     </div>
     <div class="modal-footer">
