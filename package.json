@@ -1,0 +1,8 @@
+{
+  "name": "ali-tracker",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "googleapis": "^140.0.0"
+  }
+}
