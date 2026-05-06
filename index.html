@@ -1180,6 +1180,18 @@ const MONTHS = [
   '2025-07','2025-08','2025-09','2025-10','2025-11','2025-12',
   '2026-01','2026-02','2026-03','2026-04'
 ];
+// Auto-extend MONTHS up to the current month so it never falls behind
+(function() {
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  let last = MONTHS[MONTHS.length - 1];
+  while (last < today) {
+    const [y, m] = last.split('-').map(Number);
+    const next = m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,'0')}`;
+    MONTHS.push(next);
+    last = next;
+  }
+})();
 
 const MONTH_NAMES = {
   '01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun',
@@ -1820,7 +1832,9 @@ const INCOME = [
 // ════════════════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════════════════
-let currentMonth = '2026-04';
+const _now = new Date();
+const _todayMonth = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+let currentMonth = MONTHS.includes(_todayMonth) ? _todayMonth : MONTHS[MONTHS.length - 1];
 let searchQuery = '';
 let activeTripFilter = null;
 let incomeOpen = true;
